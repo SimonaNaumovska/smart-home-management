@@ -8,7 +8,8 @@ import { UserManagement } from "./components/UserManagement";
 import { ChoresDashboard } from "./components/ChoresDashboard";
 import { ConsumptionLogger } from "./components/ConsumptionLogger";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
-import { AISuggestions } from "./components/AISuggestions";
+import { SuggestionsPanel } from "./components/SuggestionsPanel";
+import { NaturalLanguageLogger } from "./components/NaturalLanguageLogger";
 import { ReceiptScanner } from "./components/ReceiptScanner";
 import BarcodeScanner from "./components/BarcodeScanner";
 import DataBackup from "./components/DataBackup";
@@ -270,6 +271,16 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       addFoodProduct();
     } else {
       addCleaningProduct();
+    }
+  };
+
+  // Generic handler for AI/direct product additions
+  const addProductDirectly = (product: Product) => {
+    setProducts([...products, product]);
+
+    // Sync to Firebase
+    if (useFirebase && householdId) {
+      addProductDB(householdId, product);
     }
   };
 
@@ -634,6 +645,14 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
             </button>
           </div>
 
+          {/* Natural Language Logger */}
+          <NaturalLanguageLogger
+            products={products}
+            onAddProduct={addProductDirectly}
+            onUpdateProduct={updateProduct}
+            onConsumeProduct={handleLogConsumption}
+          />
+
           {inventoryView === "dashboard" ? (
             <InventoryDashboard
               products={products}
@@ -767,10 +786,11 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       )}
 
       {activeTab === "ai" && (
-        <AISuggestions
-          consumptionLogs={consumptionLogs}
-          users={users}
+        <SuggestionsPanel
           products={products}
+          chores={chores}
+          consumptionLogs={consumptionLogs}
+          onProductUpdate={updateProduct}
         />
       )}
 

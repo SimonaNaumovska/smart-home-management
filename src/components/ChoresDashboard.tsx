@@ -47,8 +47,8 @@ export function ChoresDashboard({
   const [showAddForm, setShowAddForm] = useState(false);
   const [taskName, setTaskName] = useState("");
   const [room, setRoom] = useState("Kitchen");
-  const [category, setCategory] =
-    useState<ChoreDefinition["category"]>("Daily");
+  const [choreCategory, setChoreCategory] =
+    useState<ChoreDefinition["choreCategory"]>("Daily");
   const [priority, setPriority] =
     useState<ChoreDefinition["priority"]>("02 Normal");
   const [frequency, setFrequency] = useState(1);
@@ -89,7 +89,7 @@ export function ChoresDashboard({
       id: `TASK-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       name: taskName,
       room,
-      category,
+      choreCategory,
       priority,
       active: true,
       done: false,
@@ -212,6 +212,84 @@ export function ChoresDashboard({
         </div>
       )}
 
+      {/* Summary Stats */}
+      <div
+        style={{
+          marginBottom: "24px",
+          display: "flex",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          style={{
+            flex: "1 1 200px",
+            padding: "16px",
+            backgroundColor: "#FFEBEE",
+            borderRadius: "8px",
+            borderLeft: "4px solid #f44336",
+          }}
+        >
+          <div
+            style={{ fontSize: "24px", fontWeight: "bold", color: "#f44336" }}
+          >
+            {chores.filter((c) => getStatus(c).includes("OVERDUE")).length}
+          </div>
+          <div style={{ color: "#666" }}>Overdue Tasks</div>
+        </div>
+
+        <div
+          style={{
+            flex: "1 1 200px",
+            padding: "16px",
+            backgroundColor: "#FFF3E0",
+            borderRadius: "8px",
+            borderLeft: "4px solid #FF9800",
+          }}
+        >
+          <div
+            style={{ fontSize: "24px", fontWeight: "bold", color: "#FF9800" }}
+          >
+            {chores.filter((c) => getStatus(c).includes("DUE TODAY")).length}
+          </div>
+          <div style={{ color: "#666" }}>Due Today</div>
+        </div>
+
+        <div
+          style={{
+            flex: "1 1 200px",
+            padding: "16px",
+            backgroundColor: "#E8F5E9",
+            borderRadius: "8px",
+            borderLeft: "4px solid #4CAF50",
+          }}
+        >
+          <div
+            style={{ fontSize: "24px", fontWeight: "bold", color: "#4CAF50" }}
+          >
+            {chores.filter((c) => c.active).length}
+          </div>
+          <div style={{ color: "#666" }}>Active Tasks</div>
+        </div>
+
+        <div
+          style={{
+            flex: "1 1 200px",
+            padding: "16px",
+            backgroundColor: "#F3E5F5",
+            borderRadius: "8px",
+            borderLeft: "4px solid #9C27B0",
+          }}
+        >
+          <div
+            style={{ fontSize: "24px", fontWeight: "bold", color: "#9C27B0" }}
+          >
+            {chores.filter((c) => c.skipToday).length}
+          </div>
+          <div style={{ color: "#666" }}>Skipped Today</div>
+        </div>
+      </div>
+
       {/* Add Task Form */}
       {showAddForm && (
         <div
@@ -290,10 +368,11 @@ export function ChoresDashboard({
                 Category
               </label>
               <select
-                value={category}
+                value={choreCategory}
                 onChange={(e) => {
-                  const cat = e.target.value as ChoreDefinition["category"];
-                  setCategory(cat);
+                  const cat = e.target
+                    .value as ChoreDefinition["choreCategory"];
+                  setChoreCategory(cat);
                   const freq =
                     CATEGORIES.find((c) => c.label === cat)?.days || 1;
                   setFrequency(freq);
@@ -514,7 +593,9 @@ export function ChoresDashboard({
                     <td style={{ padding: "12px 8px", color: "#666" }}>
                       {chore.room}
                     </td>
-                    <td style={{ padding: "12px 8px" }}>{chore.category}</td>
+                    <td style={{ padding: "12px 8px" }}>
+                      {chore.choreCategory}
+                    </td>
                     <td
                       style={{
                         padding: "12px 8px",
@@ -627,84 +708,6 @@ export function ChoresDashboard({
             )}
           </tbody>
         </table>
-      </div>
-
-      {/* Summary Stats */}
-      <div
-        style={{
-          marginTop: "24px",
-          display: "flex",
-          gap: "16px",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#FFEBEE",
-            borderRadius: "8px",
-            borderLeft: "4px solid #f44336",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#f44336" }}
-          >
-            {chores.filter((c) => getStatus(c).includes("OVERDUE")).length}
-          </div>
-          <div style={{ color: "#666" }}>Overdue Tasks</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#FFF3E0",
-            borderRadius: "8px",
-            borderLeft: "4px solid #FF9800",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#FF9800" }}
-          >
-            {chores.filter((c) => getStatus(c).includes("DUE TODAY")).length}
-          </div>
-          <div style={{ color: "#666" }}>Due Today</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#E8F5E9",
-            borderRadius: "8px",
-            borderLeft: "4px solid #4CAF50",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#4CAF50" }}
-          >
-            {chores.filter((c) => c.active).length}
-          </div>
-          <div style={{ color: "#666" }}>Active Tasks</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#F3E5F5",
-            borderRadius: "8px",
-            borderLeft: "4px solid #9C27B0",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#9C27B0" }}
-          >
-            {chores.filter((c) => c.skipToday).length}
-          </div>
-          <div style={{ color: "#666" }}>Skipped Today</div>
-        </div>
       </div>
     </div>
   );
