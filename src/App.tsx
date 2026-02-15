@@ -10,6 +10,7 @@ import { ConsumptionLogger } from "./components/ConsumptionLogger";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { AISuggestions } from "./components/AISuggestions";
 import { ReceiptScanner } from "./components/ReceiptScanner";
+import BarcodeScanner from "./components/BarcodeScanner";
 import DataBackup from "./components/DataBackup";
 import {
   syncProducts,
@@ -40,7 +41,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const [consumptionLogs, setConsumptionLogs] = useState<ConsumptionLog[]>([]);
   const [activeTab, setActiveTab] = useState<"inventory" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
   const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
-  const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt">("form");
+  const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt" | "barcode">("form");
   
   // Food form states
   const [foodName, setFoodName] = useState("");
@@ -484,9 +485,9 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
         ))}
       </div>
 
-      {/* Receipt Scanner Button (always visible) */}
+      {/* Scanner Buttons (always visible) */}
       {activeTab === "inventory" && (
-        <div style={{ marginBottom: "20px", textAlign: "right" }}>
+        <div style={{ marginBottom: "20px", textAlign: "right", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
           <button
             onClick={() => setInventoryView("receipt")}
             style={{
@@ -501,6 +502,21 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
             }}
           >
             📸 Scan Receipt
+          </button>
+          <button
+            onClick={() => setInventoryView("barcode")}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: inventoryView === "barcode" ? "#4CAF50" : "#f5f5f5",
+              color: inventoryView === "barcode" ? "white" : "#333",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: inventoryView === "barcode" ? "bold" : "normal",
+              borderRadius: "6px",
+            }}
+          >
+            📷 Scan Barcode
           </button>
         </div>
       )}
@@ -578,6 +594,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
             />
           ) : inventoryView === "receipt" ? (
             <ReceiptScanner onAddItems={handleBulkAddItems} />
+          ) : inventoryView === "barcode" ? (
+            <BarcodeScanner onAddProduct={addProduct} />
           ) : (
             <>
               {/* Inventory Sub-tabs */}

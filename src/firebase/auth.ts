@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   updateProfile,
@@ -84,6 +86,34 @@ export const getHouseholdData = async (userId: string) => {
     } else {
       return { success: false, error: "Household not found" };
     }
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Sign in with Google
+export const signInWithGoogle = async () => {
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
+
+    // Check if household document exists, create if not
+    const householdDoc = await getDoc(doc(db, "households", user.uid));
+    if (!householdDoc.exists()) {
+      await setDoc(doc(db, "households", user.uid), {
+        name: user.displayName || "My Household",
+        email: user.email,
+        createdAt: new Date().toISOString(),
+        members: [],
+        settings: {
+          theme: "light",
+          notifications: true,
+        },
+      });
+    }
+
+    return { success: true, user };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

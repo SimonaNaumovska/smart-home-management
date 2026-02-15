@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { User as FirebaseUser } from "firebase/auth";
 import { onAuthChange, signOutHousehold } from "./firebase/auth";
+import { auth } from "./firebase/config";
 
 import AuthScreen from "./components/AuthScreen";
 import OfflineIndicator from "./components/OfflineIndicator";
@@ -13,32 +14,31 @@ function AppWithFirebase() {
 
   useEffect(() => {
     // Check if Firebase is configured
-    const checkFirebaseConfig = () => {
-      try {
-        const config = "YOUR_API_KEY";
-        if (config === "YOUR_API_KEY") {
-          console.log("📝 Firebase not configured. Using localStorage.");
-          setUseFirebase(false);
-          setLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.log("📝 Firebase error. Using localStorage fallback.");
+    try {
+      // Check if Firebase auth is properly initialized
+      if (
+        !auth ||
+        !auth.config.apiKey ||
+        auth.config.apiKey === "YOUR_API_KEY"
+      ) {
+        console.log("📝 Firebase not configured. Using localStorage.");
         setUseFirebase(false);
         setLoading(false);
         return;
       }
+    } catch (error) {
+      console.log("📝 Firebase error. Using localStorage fallback.");
+      setUseFirebase(false);
+      setLoading(false);
+      return;
+    }
 
-      // Listen for auth state changes
-      const unsubscribe = onAuthChange((user) => {
-        setFirebaseUser(user);
-        setLoading(false);
-      });
+    // Listen for auth state changes
+    const unsubscribe = onAuthChange((user) => {
+      setFirebaseUser(user);
+      setLoading(false);
+    });
 
-      return unsubscribe;
-    };
-
-    const unsubscribe = checkFirebaseConfig();
     return () => {
       if (unsubscribe && typeof unsubscribe === "function") {
         unsubscribe();
