@@ -22,6 +22,20 @@
 - **Stock level indicators**: None/Low/Medium/High
 - **Expiration warnings**: Red for expired, yellow for expiring soon
 
+### 📱 **Smart Scanning Features**
+
+- **📸 Receipt Scanner** - Scan grocery receipts with your phone camera
+  - Automatic item extraction with OCR (Tesseract.js)
+  - Supports Macedonian Cyrillic text
+  - Smart parsing: Item name + quantity + price
+  - Bulk add to inventory in seconds
+- **📷 Barcode Scanner** - Scan product barcodes for instant lookup
+  - Camera-based scanning with html5-qrcode
+  - OpenFoodFacts database integration (global product info)
+  - Auto-fills: Product name, brand, quantity, unit
+  - Supports all barcode formats (EAN, UPC, etc.)
+  - Editable before adding to inventory
+
 ### 🍽️ **Consumption Logging**
 
 - **Track who uses what** - log consumption by household member
@@ -107,6 +121,8 @@ src/
 │   ├── CleaningForm.tsx             # Cleaning item form (blue theme)
 │   ├── ProductList.tsx              # Simple product list view
 │   ├── InventoryDashboard.tsx       # Advanced dashboard with filters
+│   ├── ReceiptScanner.tsx           # Receipt OCR scanning (Tesseract.js)
+│   ├── BarcodeScanner.tsx           # Barcode scanning (html5-qrcode)
 │   ├── UserManagement.tsx           # Household member management
 │   ├── ChoresDashboard.tsx          # 14-column chore management
 │   ├── ChoreSystem.tsx              # Original chore component
@@ -168,6 +184,9 @@ Real-time Listener → Update Other Devices
 - **React 18** with TypeScript
 - **Firebase** (Auth + Firestore)
 - **localStorage** (fallback/offline)
+- **Tesseract.js** - Receipt OCR scanning (Macedonian + English)
+- **html5-qrcode** - Barcode scanning from camera
+- **OpenFoodFacts API** - Global product database
 - **Flexbox** layouts
 - **No external UI library** (pure CSS)
 
