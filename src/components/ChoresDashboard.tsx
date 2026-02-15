@@ -385,15 +385,6 @@ export function ChoresDashboard({
                   fontSize: "13px",
                 }}
               >
-                ID
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
                 Task
               </th>
               <th
@@ -484,24 +475,6 @@ export function ChoresDashboard({
                   fontSize: "13px",
                 }}
               >
-                Frequency
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Skip Days
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
                 Actions
               </th>
             </tr>
@@ -510,7 +483,7 @@ export function ChoresDashboard({
             {sortedChores.length === 0 ? (
               <tr>
                 <td
-                  colSpan={14}
+                  colSpan={11}
                   style={{
                     padding: "40px",
                     textAlign: "center",
@@ -535,16 +508,6 @@ export function ChoresDashboard({
                       backgroundColor: chore.skipToday ? "#FFF9C4" : "white",
                     }}
                   >
-                    <td
-                      style={{
-                        padding: "12px 8px",
-                        fontSize: "11px",
-                        fontFamily: "monospace",
-                        color: "#666",
-                      }}
-                    >
-                      {chore.id}
-                    </td>
                     <td style={{ padding: "12px 8px", fontWeight: "bold" }}>
                       {chore.name}
                     </td>
@@ -641,12 +604,6 @@ export function ChoresDashboard({
                       >
                         {status}
                       </span>
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      {chore.frequency}
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      {chore.skipDays || 0}
                     </td>
                     <td style={{ padding: "12px 8px", textAlign: "center" }}>
                       <button
