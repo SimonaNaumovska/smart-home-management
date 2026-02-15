@@ -90,20 +90,24 @@
 
 ## 🚀 Quick Start
 
-### Option 1: Local Mode (No Setup Required)
+### Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open browser → App works with localStorage!
+**Local Mode**: Works with localStorage immediately
 
-### Option 2: Cloud Sync Mode (5-Minute Setup)
+**Cloud Sync Mode**: Configure Supabase
 
-1. **Follow FIREBASE_SETUP.md** (comprehensive guide included)
-2. Create Firebase project (free tier)
-3. Update `src/firebase/config.ts` with credentials
+1. Create Supabase project at [supabase.com](https://supabase.com)
+2. Run the SQL schema: `supabase-schema-regenerated.sql`
+3. Add to `.env.local`:
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_KEY=your-anon-key
+   ```
 4. Restart app → Cloud sync enabled!
 
 ---
@@ -113,14 +117,14 @@ Open browser → App works with localStorage!
 ```
 src/
 ├── App.tsx                          # Main app component
-├── AppWithFirebase.tsx              # Firebase wrapper
 ├── main.tsx                         # Entry point
 │
 ├── components/
 │   ├── FoodForm.tsx                 # Food item form (green theme)
 │   ├── CleaningForm.tsx             # Cleaning item form (blue theme)
-│   ├── ProductList.tsx              # Simple product list view
+│   ├── ProductList.tsx              # Product list with edit modal
 │   ├── InventoryDashboard.tsx       # Advanced dashboard with filters
+│   ├── ShoppingList.tsx             # Shopping list with categories
 │   ├── ReceiptScanner.tsx           # Receipt OCR scanning (Tesseract.js)
 │   ├── BarcodeScanner.tsx           # Barcode scanning (html5-qrcode)
 │   ├── UserManagement.tsx           # Household member management
@@ -129,14 +133,14 @@ src/
 │   ├── ConsumptionLogger.tsx        # Food consumption logging
 │   ├── AnalyticsDashboard.tsx       # Alerts and user stats
 │   ├── AISuggestions.tsx            # AI-powered suggestions
-│   ├── AuthScreen.tsx               # Sign up/sign in screen
+│   ├── NaturalLanguageLogger.tsx    # Natural language input via AI
+│   ├── SuggestionsPanel.tsx         # AI suggestions display
 │   ├── OfflineIndicator.tsx         # Offline mode banner
 │   └── DataBackup.tsx               # Export/import functionality
 │
-├── firebase/
-│   ├── config.ts                    # Firebase configuration
-│   ├── auth.ts                      # Authentication functions
-│   └── database.ts                  # Firestore CRUD operations
+├── supabase/
+│   ├── config.ts                    # Supabase client configuration
+│   └── database.ts                  # PostgreSQL CRUD operations + conversions
 │
 └── types/
     └── Product.ts                   # TypeScript interfaces
@@ -153,13 +157,14 @@ src/
 - No setup required
 - Single-device only
 
-### **Cloud Mode (Firebase)**
+### **Cloud Mode (Supabase)**
 
-1. User creates household account
-2. Signs in → All data syncs to Firestore
-3. Real-time listeners update ALL devices
+1. App connects to Supabase PostgreSQL
+2. All data syncs to secure cloud database
+3. Real-time listeners update all devices
 4. Offline support with sync queue
 5. Auto-backup every change
+6. Row-level security (RLS) protects data
 
 ---
 
@@ -172,7 +177,7 @@ React State Update (immediate UI update)
     ↓
 localStorage Save (backup)
     ↓
-Firebase Sync (if configured)
+Supabase PostgreSQL Sync (if configured)
     ↓
 Real-time Listener → Update Other Devices
 ```
@@ -182,19 +187,21 @@ Real-time Listener → Update Other Devices
 ## 🛠️ Tech Stack
 
 - **React 18** with TypeScript
-- **Firebase** (Auth + Firestore)
+- **Supabase** (PostgreSQL + Real-time)
+- **Groq AI** (llama-3.3-70b-versatile)
 - **localStorage** (fallback/offline)
 - **Tesseract.js** - Receipt OCR scanning (Macedonian + English)
 - **html5-qrcode** - Barcode scanning from camera
 - **OpenFoodFacts API** - Global product database
 - **Flexbox** layouts
 - **No external UI library** (pure CSS)
-
----
-
-## 📊 Navigation Tabs
-
-1. **📦 Inventory** - Food & cleaning items management
+🛒 Shopping** - Shopping list with category filtering
+3. **🍽️ Consumption** - Log food usage
+4. **🧹 Chores** - Task management dashboard
+5. **📊 Analytics** - Alerts and user activity
+6. **🤖 AI Smart** - Intelligent suggestions + Natural language input
+7. **👥 Members** - Household user management
+8. **⚙️ Settings** - Backup, export, cloud syncanagement
 2. **🍽️ Consumption** - Log food usage
 3. **🧹 Chores** - Task management dashboard
 4. **📊 Analytics** - Alerts and user activity
@@ -214,15 +221,42 @@ Real-time Listener → Update Other Devices
 - Consumption Logs → `consumptionLogs` key
 - Active User → `activeUser` key
 
-### Firestore Structure (When Firebase Configured)
+### Supabase PostgreSQL Structure (Cloud Sync)
 
 ```
-households/{householdId}/
-  ├── products/{productId}
-  ├── users/{userId}
-  ├── chores/{choreId}
-  ├── consumptionLogs/{logId}
-  └── activeUsers/{deviceId}
+households
+  ├── id (TEXT, primary key)
+  └── name, created_at
+
+products
+  ├── id, household_id (FK)
+  ├── name, category, quantity, unit
+  ├── min_stock, purchased, use_by, storage
+  ├── to_buy, frequently_used
+  └── created_at, updated_at
+
+users
+  ├── id, household_id (FK)
+  ├── name, avatar, color
+  └── created_at
+
+chores
+  ├── id, household_id (FK)
+  ├── name, description, frequency
+  ├── active, assigned_to, duedate
+  ├── chore_category, consumed_products (JSONB)
+  └── created_at, updated_at
+
+consumption_logs
+  ├── id, household_id (FK)
+  ├── user_id, product_id
+  ├── amount, unit, type
+  └── created_at
+
+rooms & chore_categories
+  ├── id, household_id (FK)
+  ├── name, icon, color
+  └── created_at
 ```
 
 ---
@@ -241,12 +275,14 @@ households/{householdId}/
 
 ## 🔐 Security
 
-### Firebase Security Rules (Implemented)
+### Supabase Row-Level Security (RLS)
 
-- Only authenticated users access data
-- Users can only access their household
-- All sub-collections protected
-- No public read/write access
+- ✅ Enabled on all 7 tables
+- ✅ Split policies: SELECT, INSERT, UPDATE, DELETE
+- ✅ Users can only access their household
+- ✅ App-level access control via household_id
+- ✅ No public read/write access
+- ✅ PostgreSQL constraints and indexes
 
 ### localStorage
 
@@ -260,49 +296,49 @@ households/{householdId}/
 
 ### Same Household, Multiple Devices:
 
-1. Sign in with **same email/password** on all devices
-2. Each device syncs instantly
+1. All devices use same `VITE_SUPABASE_URL` and key
+2. Each device syncs instantly via Supabase
 3. Each person selects their profile in "Members" tab
-4. System tracks who does what
+4. System tracks who does what with real-time updates
 
 ### Example Family Setup:
 
-- **Mom's Phone**: Signs in as `smithfamily@email.com`
-- **Dad's Tablet**: Signs in as `smithfamily@email.com`
-- **Kitchen Computer**: Signs in as `smithfamily@email.com`
-- All 3 devices show same data, sync in real-time!
+- **Mom's Phone**: Runs app, uses 'Mom' profile
+- **Dad's Tablet**: Runs app, uses 'Dad' profile
+- **Kitchen Computer**: Runs app, uses 'Home' profile
+- All 3 devices show same data, sync instantly via Supabase!
 
 ---
 
 ## 🚀 Deployment Options
 
-### 1. **Firebase Hosting** (Recommended)
-
-```bash
-npm run build
-firebase deploy
-```
-
-Free hosting with your Firebase project!
-
-### 2. **Vercel**
+### 1. **Vercel** (Recommended)
 
 ```bash
 npm run build
 vercel deploy
 ```
+Set environment variables in Vercel dashboard
 
-### 3. **Netlify**
+### 2. **Netlify**
 
-Drag and drop `dist` folder after build
+Drag and drop `dist` folder after build, set env vars in settings
+
+### 3. **Docker / Self-Hosted**
+
+```bash
+npm run build
+# Deploy dist/ folder to your server
+```
 
 ---
 
 ## 📚 Documentation Files
 
 - **README.md** (this file) - Complete overview
-- **FIREBASE_SETUP.md** - Step-by-step Firebase guide
+- **supabase-schema-regenerated.sql** - Database schema (run in Supabase SQL editor)
 - **package.json** - Dependencies and scripts
+- **FIREBASE_SETUP.md** - Legacy Firebase setup (archived, not needed)
 
 ---
 
@@ -311,7 +347,7 @@ Drag and drop `dist` folder after build
 ### 1. **Start Local, Upgrade Later**
 
 - Use app with localStorage first
-- Set up Firebase when ready for multi-device
+- Set up Supabase when ready for multi-device sync
 
 ### 2. **Export Backups Regularly**
 
@@ -367,38 +403,41 @@ Drag and drop `dist` folder after build
 
 ## 🔧 Configuration
 
-### Firebase Config Location:
+### Supabase Config Location:
 
-`src/firebase/config.ts`
+`.env.local`
 
-### Required Firebase Products:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_KEY=your-anon-key-here
+VITE_GROQ_API_KEY=your-groq-api-key-here
+```
 
-- ✅ Authentication (Email/Password)
-- ✅ Firestore Database
+### Required Supabase Products:
+
+- ✅ PostgreSQL Database
+- ✅ Real-time subscriptions
+- ✅ Row-level security (RLS)
+- ❌ Authentication (not needed - app-level access)
 - ❌ Storage (not needed)
-- ❌ Functions (not needed)
-- ❌ Hosting (optional)
 
 ---
 
 ## 📈 Scalability
 
-### Current Limits (Firebase Free Tier):
+### Supabase Free Tier Limits:
 
 - **Users**: Unlimited households
-- **Data**: 1GB storage
-- **Reads**: 50,000/day
-- **Writes**: 20,000/day
+- **Data**: 500MB storage (PostgreSQL)
+- **Connections**: 10 simultaneous
+- **API Requests**: Unlimited
+- **Real-time**: Unlimited concurrent subscriptions
 
-**Perfect for household use!** Even large families won't hit limits.
+**Perfect for household use!** Enterprise-grade database for free!
 
 ---
 
-## 🎓 Learning Resources
 
-- [Firebase Documentation](https://firebase.google.com/docs)
-- [React Docs](https://react.dev/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
 ---
 
@@ -406,14 +445,16 @@ Drag and drop `dist` folder after build
 
 **You now have:**
 ✅ Complete household management system
-✅ Multi-device real-time sync
-✅ AI-powered suggestions
-✅ Cloud backup
+✅ Multi-device real-time sync (Supabase)
+✅ AI-powered suggestions (Groq)
+✅ Natural language input
+✅ Shopping list management
+✅ Cloud backup (PostgreSQL)
 ✅ Offline support
-✅ Enterprise-grade authentication
-✅ 7 major feature modules
-✅ 17 React components
-✅ Complete Firebase integration
+✅ Enterprise-grade database
+✅ 8 major feature modules
+✅ 20+ React components
+✅ Row-level security (RLS)
 ✅ localStorage fallback
 ✅ Production-ready code
 
@@ -427,20 +468,31 @@ Drag and drop `dist` folder after build
 
 - Check browser console for errors
 - Clear browser cache
-- Verify Firebase config if using cloud mode
+- Verify Supabase credentials in `.env.local`
 
 ### Data not syncing?
 
 - Check internet connection
 - See offline indicator at top
-- Verify Firebase rules are set correctly
+- Verify Supabase URL and key are correct
+- Check Supabase dashboard for RLS policy issues
 
-### Firebase errors?
+### Supabase errors?
 
-- Re-check FIREBASE_SETUP.md steps
-- Verify API key in config.ts
-- Check Firebase Console for issues
+- Verify schema is created: Run `supabase-schema-regenerated.sql`
+- Check RLS policies are enabled on all tables
+- Verify `.env.local` has correct URL and key
+- Check Supabase dashboard → Logs for errors
 
 ---
 
 **Built with ❤️ for smart households everywhere!**
+
+---
+
+## 🎓 Learning Resources
+
+- [Supabase Documentation](https://supabase.com/docs)
+- [React Docs](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Groq API Docs](https://groq.com/)
