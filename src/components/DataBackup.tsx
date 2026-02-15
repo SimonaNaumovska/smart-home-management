@@ -1,65 +1,47 @@
 import React, { useState } from "react";
-import { exportAllData, importData } from "../firebase/database";
 
 interface DataBackupProps {
   householdId: string;
 }
 
-const DataBackup: React.FC<DataBackupProps> = ({ householdId }) => {
+const DataBackup: React.FC<DataBackupProps> = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const handleExport = async () => {
+    setLoading(false);
+    setMessage("❌ Export feature coming soon (migrating to Supabase)");
+    return;
+    /* TODO: Implement Supabase export
     setLoading(true);
     setMessage("");
 
-    const result = await exportAllData(householdId);
+    // const result = await exportAllData(householdId);
 
-    if (result.success) {
+    if (false) { // result.success
       // Create JSON file
-      const dataStr = JSON.stringify(result.data, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
+      // const dataStr = JSON.stringify(result.data, null, 2);
+      // const dataBlob = new Blob([dataStr], { type: "application/json" });
+      // const url = URL.createObjectURL(dataBlob);
 
-      // Download file
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `household-backup-${new Date().toISOString().split("T")[0]}.json`;
-      link.click();
+      // // Download file
+      // const link = document.createElement("a");
+      // link.href = url;
+      // link.download = `household-backup-${new Date().toISOString().split("T")[0]}.json`;
+      // link.click();
 
-      URL.revokeObjectURL(url);
-      setMessage("✅ Backup downloaded successfully!");
+      // URL.revokeObjectURL(url);
+      // setMessage("✅ Backup downloaded successfully!");
     } else {
       setMessage("❌ Export failed: " + result.error);
     }
 
     setLoading(false);
+    */
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-
-      const result = await importData(householdId, data);
-
-      if (result.success) {
-        setMessage("✅ Data imported successfully!");
-      } else {
-        setMessage("❌ Import failed: " + result.error);
-      }
-    } catch (error: any) {
-      setMessage("❌ Invalid backup file: " + error.message);
-    }
-
-    setLoading(false);
-    e.target.value = "";
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMessage("❌ Import feature coming soon (migrating to Supabase)");
   };
 
   return (

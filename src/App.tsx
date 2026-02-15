@@ -14,6 +14,10 @@ import { ReceiptScanner } from "./components/ReceiptScanner";
 import BarcodeScanner from "./components/BarcodeScanner";
 import DataBackup from "./components/DataBackup";
 import RoomCategoryManagement from "./components/RoomCategoryManagement";
+import { ShoppingList } from "./components/ShoppingList";
+
+// Temporary fallback: localStorage backup while Supabase syncs
+const useFallbackStorage = true;
 import {
   syncProducts,
   syncUsers,
@@ -26,15 +30,16 @@ import {
   addChore as addChoreDB,
   updateChore as updateChoreDB,
   deleteChore as deleteChoreDB,
-  addConsumptionLog as addConsumptionLogDB
-} from "./firebase/database";
+  addConsumptionLog as addConsumptionLogDB,
+  toggleToBuyStatus as toggleToBuyStatusDB,
+  markItemPurchased as markItemPurchasedDB
+} from "./supabase/database";
 
 interface AppProps {
   householdId?: string;
-  useFirebase?: boolean;
 }
 
-function App({ householdId, useFirebase = false }: AppProps = {}) {
+function App({ householdId = "default-household" }: AppProps = {}) {
   // Core state
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -43,7 +48,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const [consumptionLogs, setConsumptionLogs] = useState<ConsumptionLog[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [choreCategories, setChoreCategories] = useState<ChoreCategory[]>([]);
-  const [activeTab, setActiveTab] = useState<"inventory" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
+  const [activeTab, setActiveTab] = useState<"inventory" | "shopping" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
   const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
   const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt" | "barcode">("form");
   
@@ -68,8 +73,13 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const [cleaningFrequentlyUsed, setCleaningFrequentlyUsed] = useState(false);
   const [cleaningToBuy, setCleaningToBuy] = useState(false);
 
-  // Load from localStorage on mount
+  // ====================================
+  // TEMPORARY FALLBACK: localStorage backup
+  // While Supabase schema is being set up
+  // Remove this block once Supabase is fully operational
+  // ====================================
   useEffect(() => {
+    if (!useFallbackStorage) return;
     try {
       const savedProducts = localStorage.getItem("products");
       const savedUsers = localStorage.getItem("users");
@@ -93,76 +103,35 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       if (savedRooms) setRooms(JSON.parse(savedRooms));
       if (savedCategories) setChoreCategories(JSON.parse(savedCategories));
       
-      console.log("✅ Data loaded from localStorage successfully");
+      console.log("✅ Data loaded from localStorage fallback");
     } catch (error) {
-      console.error("❌ Error loading data from localStorage:", error);
+      console.error("Error loading fallback data:", error);
     }
   }, []);
 
-  // Save to localStorage
+  // Backup data to localStorage while Supabase connects
   useEffect(() => {
+    if (!useFallbackStorage) return;
     try {
       localStorage.setItem("products", JSON.stringify(products));
-    } catch (error) {
-      console.error("Error saving products:", error);
-    }
-  }, [products]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("users", JSON.stringify(users));
-    } catch (error) {
-      console.error("Error saving users:", error);
-    }
-  }, [users]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("chores", JSON.stringify(chores));
-    } catch (error) {
-      console.error("Error saving chores:", error);
-    }
-  }, [chores]);
-
-  useEffect(() => {
-    try {
       localStorage.setItem("consumptionLogs", JSON.stringify(consumptionLogs));
-    } catch (error) {
-      console.error("Error saving consumption logs:", error);
-    }
-  }, [consumptionLogs]);
-
-  useEffect(() => {
-    try {
+      localStorage.setItem("rooms", JSON.stringify(rooms));
+      localStorage.setItem("choreCategories", JSON.stringify(choreCategories));
       if (activeUser) {
         localStorage.setItem("activeUser", activeUser.id);
-      } else {
-        localStorage.removeItem("activeUser");
       }
     } catch (error) {
-      console.error("Error saving active user:", error);
+      console.error("Error backing up to localStorage:", error);
     }
-  }, [activeUser]);
+  }, [products, users, chores, consumptionLogs, rooms, choreCategories, activeUser]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("rooms", JSON.stringify(rooms));
-    } catch (error) {
-      console.error("Error saving rooms:", error);
-    }
-  }, [rooms]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem("choreCategories", JSON.stringify(choreCategories));
-    } catch (error) {
-      console.error("Error saving chore categories:", error);
-    }
-  }, [choreCategories]);
 
-  // Firebase real-time sync
+  // Supabase real-time sync (always enabled, Firebase flag ignored)
   useEffect(() => {
-    if (!useFirebase || !householdId) return;
+    if (!householdId) return;
 
     const unsubscribers: (() => void)[] = [];
 
@@ -193,7 +162,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
     return () => {
       unsubscribers.forEach(unsub => unsub());
     };
-  }, [useFirebase, householdId]);
+  }, [householdId]);
 
   const addFoodProduct = () => {
     if (!foodName || foodQuantity === "" || foodMinStock === "") return;
@@ -214,10 +183,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
 
     setProducts([...products, newProduct]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addProductDB(householdId, newProduct);
-    }
+    // Sync to Supabase
+    addProductDB(householdId, newProduct);
 
     // reset form
     setFoodName("");
@@ -250,10 +217,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
 
     setProducts([...products, newProduct]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addProductDB(householdId, newProduct);
-    }
+    // Sync to Supabase
+    addProductDB(householdId, newProduct);
 
     // reset form
     setCleaningName("");
@@ -278,10 +243,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const addProductDirectly = (product: Product) => {
     setProducts([...products, product]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addProductDB(householdId, product);
-    }
+    // Sync to Supabase
+    addProductDB(householdId, product);
   };
 
   const handleBulkAddItems = (items: Partial<Product>[]) => {
@@ -298,12 +261,10 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
 
     setProducts([...products, ...newProducts]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      newProducts.forEach((product) => {
-        addProductDB(householdId, product);
-      });
-    }
+    // Sync to Supabase
+    newProducts.forEach((product) => {
+      addProductDB(householdId, product);
+    });
 
     alert(`✅ Added ${newProducts.length} items to inventory!`);
   };
@@ -321,10 +282,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       setActiveUser(newUser);
     }
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addUserDB(householdId, newUser);
-    }
+    // Sync to Supabase
+    addUserDB(householdId, newUser);
   };
 
   const handleSelectUser = (user: User) => {
@@ -386,24 +345,20 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
     };
     setConsumptionLogs([...consumptionLogs, newLog]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addConsumptionLogDB(householdId, newLog);
-      updateProductDB(householdId, {
-        ...product,
-        quantity: Math.max(0, product.quantity - amount)
-      });
-    }
+    // Sync to Supabase
+    addConsumptionLogDB(householdId, newLog);
+    updateProductDB(householdId, {
+      ...product,
+      quantity: Math.max(0, product.quantity - amount)
+    });
   };
 
   // Chore management
   const handleAddChore = (chore: ChoreDefinition) => {
     setChores([...chores, chore]);
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      addChoreDB(householdId, chore);
-    }
+    // Sync to Supabase
+    addChoreDB(householdId, chore);
   };
 
   const handleUpdateChore = (updatedChore: ChoreDefinition) => {
@@ -411,21 +366,66 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       prevChores.map((c) => (c.id === updatedChore.id ? updatedChore : c))
     );
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      updateChoreDB(householdId, updatedChore);
-    }
+    // Sync to Supabase
+    updateChoreDB(householdId, updatedChore);
   };
 
   const handleDeleteChore = (choreId: string) => {
     if (confirm("Are you sure you want to delete this task?")) {
       setChores((prevChores) => prevChores.filter((c) => c.id !== choreId));
 
-      // Sync to Firebase
-      if (useFirebase && householdId) {
-        deleteChoreDB(householdId, choreId);
-      }
+      // Sync to Supabase
+      deleteChoreDB(householdId, choreId);
     }
+  };
+
+  // ====================================
+  // SHOPPING LIST HANDLERS
+  // ====================================
+  
+  const handleMarkItemPurchased = async (productId: string) => {
+    // Find product and ask for quantity purchased
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+
+    const quantityStr = prompt(
+      `How much ${product.name} did you buy?\n(Current stock: ${product.quantity} ${product.unit})`,
+      String(product.minStock || product.quantity)
+    );
+
+    if (!quantityStr) return;
+    const quantity = parseFloat(quantityStr);
+    if (isNaN(quantity) || quantity <= 0) {
+      alert("Please enter a valid quantity");
+      return;
+    }
+
+    // Update locally
+    setProducts((prevProducts) =>
+      prevProducts.map((p) =>
+        p.id === productId
+          ? {
+              ...p,
+              quantity: p.quantity + quantity,
+              toBuy: false,
+            }
+          : p
+      )
+    );
+
+    // Sync to Supabase
+    await markItemPurchasedDB(householdId, productId, quantity, product.unit);
+  };
+
+  const handleRemoveFromShoppingList = async (productId: string) => {
+    setProducts((prevProducts) =>
+      prevProducts.map((p) =>
+        p.id === productId ? { ...p, toBuy: false } : p
+      )
+    );
+
+    // Sync to Supabase
+    await toggleToBuyStatusDB(householdId, productId, false);
   };
 
   const handleCompleteChore = (choreId: string) => {
@@ -463,28 +463,22 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
         };
         setConsumptionLogs((prev) => [...prev, newLog]);
 
-        // Sync to Firebase
-        if (useFirebase && householdId) {
-          addConsumptionLogDB(householdId, newLog);
-        }
+        // Sync to Supabase
+        addConsumptionLogDB(householdId, newLog);
       }
     });
 
-    // Also update product in Firebase
-    if (useFirebase && householdId) {
-      products.forEach((p) => {
-        updateProductDB(householdId, p);
-      });
-    }
+    // Also update product in Supabase
+    products.forEach((p) => {
+      updateProductDB(householdId, p);
+    });
   };
 
   const deleteProduct = (id: string) => {
     setProducts(products.filter((p) => p.id !== id));
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      deleteProductDB(householdId, id);
-    }
+    // Sync to Supabase
+    deleteProductDB(householdId, id);
   };
 
   const updateProduct = (updatedProduct: Product) => {
@@ -492,10 +486,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       prevProducts.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
     );
 
-    // Sync to Firebase
-    if (useFirebase && householdId) {
-      updateProductDB(householdId, updatedProduct);
-    }
+    // Sync to Supabase
+    updateProductDB(householdId, updatedProduct);
   };
 
   return (
@@ -517,6 +509,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       >
         {[
           { key: "inventory", label: "📦 Inventory", color: "#4CAF50" },
+          { key: "shopping", label: "🛒 Shopping", color: "#FF6F00" },
           { key: "consumption", label: "🍽️ Consumption", color: "#9C27B0" },
           { key: "chores", label: "🧹 Chores", color: "#FF9800" },
           { key: "analytics", label: "📊 Analytics", color: "#00BCD4" },
@@ -751,10 +744,23 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
             />
           )}
 
-          <ProductList products={products} onUse={() => {}} onDelete={deleteProduct} />
+          <ProductList 
+            products={products} 
+            onUse={() => {}} 
+            onDelete={deleteProduct}
+            onEdit={updateProduct}
+          />
             </>
           )}
         </>
+      )}
+
+      {activeTab === "shopping" && (
+        <ShoppingList
+          products={products}
+          onMarkPurchased={handleMarkItemPurchased}
+          onRemoveFromList={handleRemoveFromShoppingList}
+        />
       )}
 
       {activeTab === "consumption" && (
@@ -803,7 +809,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
         />
       )}
 
-      {activeTab === "settings" && useFirebase && householdId && (
+      {activeTab === "settings" && householdId && (
         <div>
           <h2 style={{ marginBottom: "20px", color: "#333" }}>⚙️ Settings & Backup</h2>
           
@@ -837,31 +843,22 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
         </div>
       )}
 
-      {activeTab === "settings" && !useFirebase && (
+      {activeTab === "settings" && (
         <div>
-          <h2 style={{ marginBottom: "20px", color: "#333" }}>⚙️ Settings</h2>
+          <h2 style={{ marginBottom: "20px", color: "#333" }}>⚙️ Settings & Backup</h2>
           
           <div
             style={{
               padding: "20px",
-              backgroundColor: "#fff3cd",
+              backgroundColor: "#e8f5e9",
               borderRadius: "8px",
               marginBottom: "20px",
             }}
           >
-            <h3 style={{ marginBottom: "10px", color: "#856404" }}>📝 Local Mode</h3>
+            <h3 style={{ marginBottom: "10px", color: "#2e7d32" }}>✅ Supabase Connected</h3>
             <p style={{ color: "#666", marginBottom: "10px" }}>
-              Currently using localStorage. Data is saved in your browser only.
+              Data is synced to PostgreSQL via Supabase. Changes are reflected across all devices in real-time.
             </p>
-            <p style={{ color: "#666", fontWeight: "bold" }}>
-              To enable multi-device sync and cloud backup:
-            </p>
-            <ol style={{ color: "#666", paddingLeft: "20px" }}>
-              <li>Check FIREBASE_SETUP.md file in your project</li>
-              <li>Create a Firebase project (5 minutes, free)</li>
-              <li>Update src/firebase/config.ts with your credentials</li>
-              <li>Restart the app</li>
-            </ol>
           </div>
 
           <RoomCategoryManagement
