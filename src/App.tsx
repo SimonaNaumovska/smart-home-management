@@ -9,6 +9,7 @@ import { ChoresDashboard } from "./components/ChoresDashboard";
 import { ConsumptionLogger } from "./components/ConsumptionLogger";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { AISuggestions } from "./components/AISuggestions";
+import { ReceiptScanner } from "./components/ReceiptScanner";
 import DataBackup from "./components/DataBackup";
 import {
   syncProducts,
@@ -39,7 +40,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const [consumptionLogs, setConsumptionLogs] = useState<ConsumptionLog[]>([]);
   const [activeTab, setActiveTab] = useState<"inventory" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
   const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
-  const [inventoryView, setInventoryView] = useState<"form" | "dashboard">("form");
+  const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt">("form");
   
   // Food form states
   const [foodName, setFoodName] = useState("");
@@ -248,6 +249,30 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
     }
   };
 
+  const handleBulkAddItems = (items: Partial<Product>[]) => {
+    const newProducts = items.map((item) => ({
+      ...item,
+      id: item.id || crypto.randomUUID(),
+      category: item.category || "food",
+      quantity: item.quantity || 0,
+      unit: item.unit || "unit",
+      minStock: item.minStock || 0,
+      purchased: item.purchased || new Date().toISOString().split("T")[0],
+      useBy: item.useBy || "",
+    })) as Product[];
+
+    setProducts([...products, ...newProducts]);
+
+    // Sync to Firebase
+    if (useFirebase && householdId) {
+      newProducts.forEach((product) => {
+        addProductDB(householdId, product);
+      });
+    }
+
+    alert(`✅ Added ${newProducts.length} items to inventory!`);
+  };
+
   // User management
   const handleAddUser = (name: string, avatar: string, color: string) => {
     const newUser: User = {
@@ -427,6 +452,7 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
           gap: "8px",
           marginBottom: "24px",
           borderBottom: "3px solid #ddd",
+          flexWrap: "wrap",
         }}
       >
         {[
@@ -457,6 +483,27 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
           </button>
         ))}
       </div>
+
+      {/* Receipt Scanner Button (always visible) */}
+      {activeTab === "inventory" && (
+        <div style={{ marginBottom: "20px", textAlign: "right" }}>
+          <button
+            onClick={() => setInventoryView("receipt")}
+            style={{
+              padding: "12px 24px",
+              backgroundColor: inventoryView === "receipt" ? "#2196F3" : "#f5f5f5",
+              color: inventoryView === "receipt" ? "white" : "#333",
+              border: "1px solid #ddd",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: inventoryView === "receipt" ? "bold" : "normal",
+              borderRadius: "6px",
+            }}
+          >
+            📸 Scan Receipt
+          </button>
+        </div>
+      )}
 
       {/* Active user indicator - Always visible */}
       {activeUser && (
@@ -529,6 +576,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
               onUpdateProduct={updateProduct}
               onDeleteProduct={deleteProduct}
             />
+          ) : inventoryView === "receipt" ? (
+            <ReceiptScanner onAddItems={handleBulkAddItems} />
           ) : (
             <>
               {/* Inventory Sub-tabs */}
