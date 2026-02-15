@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Product, User, ChoreDefinition, ConsumptionLog } from "./types/Product";
+import type { Product, User, ChoreDefinition, ConsumptionLog, Room, ChoreCategory } from "./types/Product";
 import { FoodForm } from "./components/FoodForm";
 import { CleaningForm } from "./components/CleaningForm";
 import { ProductList } from "./components/ProductList";
@@ -12,6 +12,7 @@ import { AISuggestions } from "./components/AISuggestions";
 import { ReceiptScanner } from "./components/ReceiptScanner";
 import BarcodeScanner from "./components/BarcodeScanner";
 import DataBackup from "./components/DataBackup";
+import RoomCategoryManagement from "./components/RoomCategoryManagement";
 import {
   syncProducts,
   syncUsers,
@@ -39,6 +40,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
   const [activeUser, setActiveUser] = useState<User | null>(null);
   const [chores, setChores] = useState<ChoreDefinition[]>([]);
   const [consumptionLogs, setConsumptionLogs] = useState<ConsumptionLog[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [choreCategories, setChoreCategories] = useState<ChoreCategory[]>([]);
   const [activeTab, setActiveTab] = useState<"inventory" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
   const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
   const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt" | "barcode">("form");
@@ -72,6 +75,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       const savedChores = localStorage.getItem("chores");
       const savedLogs = localStorage.getItem("consumptionLogs");
       const savedActiveUser = localStorage.getItem("activeUser");
+      const savedRooms = localStorage.getItem("rooms");
+      const savedCategories = localStorage.getItem("choreCategories");
       
       if (savedProducts) setProducts(JSON.parse(savedProducts));
       if (savedUsers) {
@@ -84,6 +89,8 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       }
       if (savedChores) setChores(JSON.parse(savedChores));
       if (savedLogs) setConsumptionLogs(JSON.parse(savedLogs));
+      if (savedRooms) setRooms(JSON.parse(savedRooms));
+      if (savedCategories) setChoreCategories(JSON.parse(savedCategories));
       
       console.log("✅ Data loaded from localStorage successfully");
     } catch (error) {
@@ -135,6 +142,22 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
       console.error("Error saving active user:", error);
     }
   }, [activeUser]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("rooms", JSON.stringify(rooms));
+    } catch (error) {
+      console.error("Error saving rooms:", error);
+    }
+  }, [rooms]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("choreCategories", JSON.stringify(choreCategories));
+    } catch (error) {
+      console.error("Error saving chore categories:", error);
+    }
+  }, [choreCategories]);
 
   // Firebase real-time sync
   useEffect(() => {
@@ -295,6 +318,31 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
 
   const handleSelectUser = (user: User) => {
     setActiveUser(user);
+  };
+
+  // Room and Category management
+  const handleAddRoom = (room: Omit<Room, "id">) => {
+    const newRoom: Room = {
+      ...room,
+      id: crypto.randomUUID(),
+    };
+    setRooms([...rooms, newRoom]);
+  };
+
+  const handleDeleteRoom = (roomId: string) => {
+    setRooms(rooms.filter((r) => r.id !== roomId));
+  };
+
+  const handleAddCategory = (category: Omit<ChoreCategory, "id">) => {
+    const newCategory: ChoreCategory = {
+      ...category,
+      id: crypto.randomUUID(),
+    };
+    setChoreCategories([...choreCategories, newCategory]);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    setChoreCategories(choreCategories.filter((c) => c.id !== categoryId));
   };
 
   // Consumption logging
@@ -754,7 +802,18 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
             </p>
           </div>
 
-          <DataBackup householdId={householdId} />
+          <RoomCategoryManagement
+            rooms={rooms}
+            categories={choreCategories}
+            onAddRoom={handleAddRoom}
+            onAddCategory={handleAddCategory}
+            onDeleteRoom={handleDeleteRoom}
+            onDeleteCategory={handleDeleteCategory}
+          />
+
+          <div style={{ marginTop: "40px" }}>
+            <DataBackup householdId={householdId} />
+          </div>
         </div>
       )}
 
@@ -784,6 +843,15 @@ function App({ householdId, useFirebase = false }: AppProps = {}) {
               <li>Restart the app</li>
             </ol>
           </div>
+
+          <RoomCategoryManagement
+            rooms={rooms}
+            categories={choreCategories}
+            onAddRoom={handleAddRoom}
+            onAddCategory={handleAddCategory}
+            onDeleteRoom={handleDeleteRoom}
+            onDeleteCategory={handleDeleteCategory}
+          />
         </div>
       )}
     </div>

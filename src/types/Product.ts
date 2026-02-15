@@ -19,17 +19,25 @@ export interface User {
   avatar: string; // emoji
 }
 
+export interface Room {
+  id: string;
+  name: string;
+  icon: string; // emoji
+  order: number;
+}
+
+export interface ChoreCategory {
+  id: string;
+  name: string;
+  icon: string; // emoji
+  order: number;
+}
+
 export interface ChoreDefinition {
   id: string;
   name: string;
   room: string;
-  category:
-    | "Daily"
-    | "Weekly"
-    | "Biweekly"
-    | "Monthly"
-    | "Quarterly"
-    | "Half-year";
+  choreCategory: string; // Changed from 'category' to avoid confusion with product category
   priority: "01 High" | "02 Normal" | "03 Low";
   active: boolean;
   done: boolean;
