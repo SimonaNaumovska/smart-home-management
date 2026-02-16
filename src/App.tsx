@@ -155,6 +155,13 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   // Render
   // ====================================
 
+  // Check maintenance mode first (before authentication)
+  const isMaintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === "true";
+
+  if (isMaintenanceMode) {
+    return <MaintenancePage />;
+  }
+
   if (authChecking) {
     return <div className="login-container">Loading...</div>;
   }
@@ -241,8 +248,6 @@ function App({ householdId = "default-household" }: AppProps = {}) {
             onAddUser={addUser}
           />
         )}
-
-        {activeTab === "maintenance" && <MaintenancePage />}
 
         {activeTab === "settings" && (
           <div>
