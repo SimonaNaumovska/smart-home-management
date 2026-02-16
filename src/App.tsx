@@ -6,6 +6,7 @@ import { ChoresDashboard } from "./components/ChoresDashboard";
 import { ConsumptionLogger } from "./components/ConsumptionLogger";
 import { AnalyticsDashboard } from "./components/AnalyticsDashboard";
 import { SuggestionsPanel } from "./components/SuggestionsPanel";
+import { MaintenancePage } from "./components/MaintenancePage";
 import DataBackup from "./components/DataBackup";
 import RoomCategoryManagement from "./components/RoomCategoryManagement";
 import { ShoppingList } from "./components/ShoppingList";
@@ -51,7 +52,8 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     addCategory,
     deleteCategory,
   } = useChores(householdId);
-  const { consumptionLogs, logConsumption } = useConsumption(householdId);
+  const { consumptionLogs, logConsumption, deleteOldLogs, deleteAllLogs } =
+    useConsumption(householdId);
 
   // ====================================
   // Event Handlers
@@ -238,6 +240,16 @@ function App({ householdId = "default-household" }: AppProps = {}) {
             activeUser={activeUser}
             onSelectUser={selectUser}
             onAddUser={addUser}
+          />
+        )}
+
+        {activeTab === "maintenance" && (
+          <MaintenancePage
+            products={products}
+            consumptionLogs={consumptionLogs}
+            chores={chores}
+            onClearOldLogs={deleteOldLogs}
+            onClearAllLogs={deleteAllLogs}
           />
         )}
 

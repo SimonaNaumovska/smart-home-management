@@ -26,6 +26,7 @@ export const Sidebar = ({
     { key: "analytics", label: "Analytics", icon: "📊" },
     { key: "ai", label: "AI Smart", icon: "🤖" },
     { key: "members", label: "Members", icon: "👥" },
+    { key: "maintenance", label: "Maintenance", icon: "🔧" },
     { key: "settings", label: "Settings", icon: "⚙️" },
   ];
 

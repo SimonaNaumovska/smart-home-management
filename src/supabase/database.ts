@@ -488,6 +488,41 @@ export const addConsumptionLog = async (
   }
 };
 
+export const deleteOldConsumptionLogs = async (
+  householdId: string,
+  daysToKeep: number = 90,
+) => {
+  try {
+    const cutoffDate = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
+    const { error } = await supabase
+      .from("consumption_logs")
+      .delete()
+      .eq("household_id", householdId)
+      .lt("timestamp", cutoffDate);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting old consumption logs:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteAllConsumptionLogs = async (householdId: string) => {
+  try {
+    const { error } = await supabase
+      .from("consumption_logs")
+      .delete()
+      .eq("household_id", householdId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting all consumption logs:", error);
+    return { success: false, error: error.message };
+  }
+};
+
 // ====================================
 // ROOMS
 // ====================================
