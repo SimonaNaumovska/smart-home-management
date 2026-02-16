@@ -195,19 +195,20 @@ Real-time Listener → Update Other Devices
 - **OpenFoodFacts API** - Global product database
 - **Flexbox** layouts
 - **No external UI library** (pure CSS)
-🛒 Shopping** - Shopping list with category filtering
+  🛒 Shopping\*\* - Shopping list with category filtering
+
 3. **🍽️ Consumption** - Log food usage
 4. **🧹 Chores** - Task management dashboard
 5. **📊 Analytics** - Alerts and user activity
 6. **🤖 AI Smart** - Intelligent suggestions + Natural language input
 7. **👥 Members** - Household user management
 8. **⚙️ Settings** - Backup, export, cloud syncanagement
-2. **🍽️ Consumption** - Log food usage
-3. **🧹 Chores** - Task management dashboard
-4. **📊 Analytics** - Alerts and user activity
-5. **🤖 AI Smart** - Intelligent suggestions
-6. **👥 Members** - Household user management
-7. **⚙️ Settings** - Backup, export, Firebase status
+9. **🍽️ Consumption** - Log food usage
+10. **🧹 Chores** - Task management dashboard
+11. **📊 Analytics** - Alerts and user activity
+12. **🤖 AI Smart** - Intelligent suggestions
+13. **👥 Members** - Household user management
+14. **⚙️ Settings** - Backup, export, Firebase status
 
 ---
 
@@ -318,6 +319,7 @@ rooms & chore_categories
 npm run build
 vercel deploy
 ```
+
 Set environment variables in Vercel dashboard
 
 ### 2. **Netlify**
@@ -436,8 +438,6 @@ VITE_GROQ_API_KEY=your-groq-api-key-here
 **Perfect for household use!** Enterprise-grade database for free!
 
 ---
-
-
 
 ---
 

@@ -40,7 +40,7 @@ const DataBackup: React.FC<DataBackupProps> = () => {
     */
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = (_e: React.ChangeEvent<HTMLInputElement>) => {
     setMessage("❌ Import feature coming soon (migrating to Supabase)");
   };
 
