@@ -52,8 +52,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     addCategory,
     deleteCategory,
   } = useChores(householdId);
-  const { consumptionLogs, logConsumption, deleteOldLogs, deleteAllLogs } =
-    useConsumption(householdId);
+  const { consumptionLogs, logConsumption } = useConsumption(householdId);
 
   // ====================================
   // Event Handlers
@@ -243,15 +242,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
           />
         )}
 
-        {activeTab === "maintenance" && (
-          <MaintenancePage
-            products={products}
-            consumptionLogs={consumptionLogs}
-            chores={chores}
-            onClearOldLogs={deleteOldLogs}
-            onClearAllLogs={deleteAllLogs}
-          />
-        )}
+        {activeTab === "maintenance" && <MaintenancePage />}
 
         {activeTab === "settings" && (
           <div>
