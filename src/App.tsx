@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import type { Product, User, ChoreDefinition, ConsumptionLog, Room, ChoreCategory } from "./types/Product";
+import type {
+  Product,
+  User,
+  ChoreDefinition,
+  ConsumptionLog,
+  Room,
+  ChoreCategory,
+} from "./types/Product";
 import { FoodForm } from "./components/FoodForm";
 import { CleaningForm } from "./components/CleaningForm";
 import { ProductList } from "./components/ProductList";
@@ -15,6 +22,8 @@ import BarcodeScanner from "./components/BarcodeScanner";
 import DataBackup from "./components/DataBackup";
 import RoomCategoryManagement from "./components/RoomCategoryManagement";
 import { ShoppingList } from "./components/ShoppingList";
+import { Login } from "./components/Login";
+import { supabase } from "./supabase/config";
 
 // Temporary fallback: localStorage backup while Supabase syncs
 const useFallbackStorage = true;
@@ -32,7 +41,7 @@ import {
   deleteChore as deleteChoreDB,
   addConsumptionLog as addConsumptionLogDB,
   toggleToBuyStatus as toggleToBuyStatusDB,
-  markItemPurchased as markItemPurchasedDB
+  markItemPurchased as markItemPurchasedDB,
 } from "./supabase/database";
 
 interface AppProps {
@@ -40,6 +49,11 @@ interface AppProps {
 }
 
 function App({ householdId = "default-household" }: AppProps = {}) {
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+  const [authChecking, setAuthChecking] = useState(true);
+
   // Core state
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -48,10 +62,21 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   const [consumptionLogs, setConsumptionLogs] = useState<ConsumptionLog[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [choreCategories, setChoreCategories] = useState<ChoreCategory[]>([]);
-  const [activeTab, setActiveTab] = useState<"inventory" | "shopping" | "consumption" | "chores" | "analytics" | "ai" | "members" | "settings">("inventory");
+  const [activeTab, setActiveTab] = useState<
+    | "inventory"
+    | "shopping"
+    | "consumption"
+    | "chores"
+    | "analytics"
+    | "ai"
+    | "members"
+    | "settings"
+  >("inventory");
   const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
-  const [inventoryView, setInventoryView] = useState<"form" | "dashboard" | "receipt" | "barcode">("form");
-  
+  const [inventoryView, setInventoryView] = useState<
+    "form" | "dashboard" | "receipt" | "barcode"
+  >("form");
+
   // Food form states
   const [foodName, setFoodName] = useState("");
   const [foodQuantity, setFoodQuantity] = useState("");
@@ -74,6 +99,44 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   const [cleaningToBuy, setCleaningToBuy] = useState(false);
 
   // ====================================
+  // Authentication Check
+  // ====================================
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) {
+          setIsAuthenticated(true);
+          setCurrentUserEmail(data.session.user.email || "");
+        }
+      } catch (error) {
+        console.error("Auth check failed:", error);
+      } finally {
+        setAuthChecking(false);
+      }
+    };
+
+    checkAuth();
+
+    // Subscribe to auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setIsAuthenticated(true);
+        setCurrentUserEmail(session.user.email || "");
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUserEmail("");
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // ====================================
   // TEMPORARY FALLBACK: localStorage backup
   // While Supabase schema is being set up
   // Remove this block once Supabase is fully operational
@@ -88,13 +151,15 @@ function App({ householdId = "default-household" }: AppProps = {}) {
       const savedActiveUser = localStorage.getItem("activeUser");
       const savedRooms = localStorage.getItem("rooms");
       const savedCategories = localStorage.getItem("choreCategories");
-      
+
       if (savedProducts) setProducts(JSON.parse(savedProducts));
       if (savedUsers) {
         const parsedUsers = JSON.parse(savedUsers);
         setUsers(parsedUsers);
         if (savedActiveUser) {
-          const active = parsedUsers.find((u: User) => u.id === savedActiveUser);
+          const active = parsedUsers.find(
+            (u: User) => u.id === savedActiveUser,
+          );
           if (active) setActiveUser(active);
         }
       }
@@ -102,7 +167,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
       if (savedLogs) setConsumptionLogs(JSON.parse(savedLogs));
       if (savedRooms) setRooms(JSON.parse(savedRooms));
       if (savedCategories) setChoreCategories(JSON.parse(savedCategories));
-      
+
       console.log("✅ Data loaded from localStorage fallback");
     } catch (error) {
       console.error("Error loading fallback data:", error);
@@ -125,9 +190,15 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     } catch (error) {
       console.error("Error backing up to localStorage:", error);
     }
-  }, [products, users, chores, consumptionLogs, rooms, choreCategories, activeUser]);
-
-
+  }, [
+    products,
+    users,
+    chores,
+    consumptionLogs,
+    rooms,
+    choreCategories,
+    activeUser,
+  ]);
 
   // Supabase real-time sync (always enabled, Firebase flag ignored)
   useEffect(() => {
@@ -160,7 +231,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     unsubscribers.push(unsubLogs);
 
     return () => {
-      unsubscribers.forEach(unsub => unsub());
+      unsubscribers.forEach((unsub) => unsub());
     };
   }, [householdId]);
 
@@ -199,7 +270,8 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   };
 
   const addCleaningProduct = () => {
-    if (!cleaningName || cleaningQuantity === "" || cleaningMinStock === "") return;
+    if (!cleaningName || cleaningQuantity === "" || cleaningMinStock === "")
+      return;
 
     const newProduct: Product = {
       id: crypto.randomUUID(),
@@ -327,8 +399,8 @@ function App({ householdId = "default-household" }: AppProps = {}) {
       prevProducts.map((p) =>
         p.id === productId
           ? { ...p, quantity: Math.max(0, p.quantity - amount) }
-          : p
-      )
+          : p,
+      ),
     );
 
     // Log consumption
@@ -349,7 +421,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     addConsumptionLogDB(householdId, newLog);
     updateProductDB(householdId, {
       ...product,
-      quantity: Math.max(0, product.quantity - amount)
+      quantity: Math.max(0, product.quantity - amount),
     });
   };
 
@@ -363,7 +435,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
 
   const handleUpdateChore = (updatedChore: ChoreDefinition) => {
     setChores((prevChores) =>
-      prevChores.map((c) => (c.id === updatedChore.id ? updatedChore : c))
+      prevChores.map((c) => (c.id === updatedChore.id ? updatedChore : c)),
     );
 
     // Sync to Supabase
@@ -382,7 +454,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   // ====================================
   // SHOPPING LIST HANDLERS
   // ====================================
-  
+
   const handleMarkItemPurchased = async (productId: string) => {
     // Find product and ask for quantity purchased
     const product = products.find((p) => p.id === productId);
@@ -390,7 +462,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
 
     const quantityStr = prompt(
       `How much ${product.name} did you buy?\n(Current stock: ${product.quantity} ${product.unit})`,
-      String(product.minStock || product.quantity)
+      String(product.minStock || product.quantity),
     );
 
     if (!quantityStr) return;
@@ -409,8 +481,8 @@ function App({ householdId = "default-household" }: AppProps = {}) {
               quantity: p.quantity + quantity,
               toBuy: false,
             }
-          : p
-      )
+          : p,
+      ),
     );
 
     // Sync to Supabase
@@ -420,8 +492,8 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   const handleRemoveFromShoppingList = async (productId: string) => {
     setProducts((prevProducts) =>
       prevProducts.map((p) =>
-        p.id === productId ? { ...p, toBuy: false } : p
-      )
+        p.id === productId ? { ...p, toBuy: false } : p,
+      ),
     );
 
     // Sync to Supabase
@@ -436,15 +508,24 @@ function App({ householdId = "default-household" }: AppProps = {}) {
 
     // Deduct products consumed by this chore
     chore.consumedProducts.forEach((consumedProduct) => {
-      const product = products.find((p) => p.name.toLowerCase() === consumedProduct.productName.toLowerCase());
-      
+      const product = products.find(
+        (p) =>
+          p.name.toLowerCase() === consumedProduct.productName.toLowerCase(),
+      );
+
       if (product) {
         setProducts((prevProducts) =>
           prevProducts.map((p) =>
             p.id === product.id
-              ? { ...p, quantity: Math.max(0, p.quantity - consumedProduct.defaultAmount) }
-              : p
-          )
+              ? {
+                  ...p,
+                  quantity: Math.max(
+                    0,
+                    p.quantity - consumedProduct.defaultAmount,
+                  ),
+                }
+              : p,
+          ),
         );
 
         // Log consumption
@@ -483,7 +564,9 @@ function App({ householdId = "default-household" }: AppProps = {}) {
 
   const updateProduct = (updatedProduct: Product) => {
     setProducts((prevProducts) =>
-      prevProducts.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+      prevProducts.map((p) =>
+        p.id === updatedProduct.id ? updatedProduct : p,
+      ),
     );
 
     // Sync to Supabase
@@ -491,387 +574,475 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   };
 
   return (
-    <div className="app-container">
-      <h1 style={{ fontSize: "36px", marginBottom: "8px" }}>🏠 Smart Household OS</h1>
-      <p style={{ color: "#666", fontSize: "16px", marginBottom: "24px" }}>
-        Inventory • Consumption • Chores • Analytics • AI • Members
-      </p>
-
-      {/* Main Tab Navigation */}
-      <div
-        style={{
-          display: "flex",
-          gap: "8px",
-          marginBottom: "24px",
-          borderBottom: "3px solid #ddd",
-          flexWrap: "wrap",
-        }}
-      >
-        {[
-          { key: "inventory", label: "📦 Inventory", color: "#4CAF50" },
-          { key: "shopping", label: "🛒 Shopping", color: "#FF6F00" },
-          { key: "consumption", label: "🍽️ Consumption", color: "#9C27B0" },
-          { key: "chores", label: "🧹 Chores", color: "#FF9800" },
-          { key: "analytics", label: "📊 Analytics", color: "#00BCD4" },
-          { key: "ai", label: "🤖 AI Smart", color: "#E91E63" },
-          { key: "members", label: "👥 Members", color: "#673AB7" },
-          { key: "settings", label: "⚙️ Settings", color: "#607D8B" },
-        ].map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
-            style={{
-              padding: "14px 24px",
-              backgroundColor: activeTab === tab.key ? tab.color : "#f5f5f5",
-              color: activeTab === tab.key ? "white" : "#333",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: activeTab === tab.key ? "bold" : "normal",
-              borderRadius: "8px 8px 0 0",
-              transition: "all 0.2s",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Scanner Buttons (always visible) */}
-      {activeTab === "inventory" && (
-        <div style={{ marginBottom: "20px", textAlign: "right", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-          <button
-            onClick={() => setInventoryView("receipt")}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: inventoryView === "receipt" ? "#2196F3" : "#f5f5f5",
-              color: inventoryView === "receipt" ? "white" : "#333",
-              border: "1px solid #ddd",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: inventoryView === "receipt" ? "bold" : "normal",
-              borderRadius: "6px",
-            }}
-          >
-            📸 Scan Receipt
-          </button>
-          <button
-            onClick={() => setInventoryView("barcode")}
-            style={{
-              padding: "12px 24px",
-              backgroundColor: inventoryView === "barcode" ? "#4CAF50" : "#f5f5f5",
-              color: inventoryView === "barcode" ? "white" : "#333",
-              border: "1px solid #ddd",
-              cursor: "pointer",
-              fontSize: "14px",
-              fontWeight: inventoryView === "barcode" ? "bold" : "normal",
-              borderRadius: "6px",
-            }}
-          >
-            📷 Scan Barcode
-          </button>
-        </div>
-      )}
-
-      {/* Active user indicator - Always visible */}
-      {activeUser && (
+    <>
+      {authChecking ? (
         <div
           style={{
-            padding: "12px 20px",
-            backgroundColor: activeUser.color,
-            color: "white",
-            borderRadius: "8px",
-            marginBottom: "20px",
-            display: "inline-flex",
+            display: "flex",
+            justifyContent: "center",
             alignItems: "center",
-            gap: "10px",
-            fontSize: "16px",
-            fontWeight: "bold",
+            minHeight: "100vh",
+            fontSize: "18px",
+            color: "#666",
           }}
         >
-          <span style={{ fontSize: "24px" }}>{activeUser.avatar}</span>
-          Active User: {activeUser.name}
+          Loading...
         </div>
-      )}
-
-      {/* Content based on active tab */}
-      {activeTab === "inventory" && (
-        <>
-          {/* View Toggle */}
+      ) : !isAuthenticated ? (
+        <Login
+          onLoginSuccess={(_userId, email) => {
+            setIsAuthenticated(true);
+            setCurrentUserEmail(email);
+          }}
+        />
+      ) : (
+        <div className="app-container">
           <div
             style={{
               display: "flex",
-              gap: "10px",
-              marginBottom: "20px",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "24px",
             }}
           >
+            <div>
+              <h1 style={{ fontSize: "36px", marginBottom: "8px" }}>
+                🏠 Smart Household OS
+              </h1>
+              <p
+                style={{ color: "#666", fontSize: "16px", marginBottom: "0px" }}
+              >
+                Inventory • Consumption • Chores • Analytics • AI • Members
+              </p>
+            </div>
             <button
-              onClick={() => setInventoryView("form")}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                setIsAuthenticated(false);
+                setCurrentUserEmail("");
+              }}
               style={{
-                padding: "10px 20px",
-                backgroundColor: inventoryView === "form" ? "#4CAF50" : "#f5f5f5",
-                color: inventoryView === "form" ? "white" : "#333",
+                padding: "8px 16px",
+                backgroundColor: "#ff6b6b",
+                color: "white",
                 border: "none",
+                borderRadius: "4px",
                 cursor: "pointer",
                 fontSize: "14px",
-                fontWeight: inventoryView === "form" ? "bold" : "normal",
-                borderRadius: "6px",
+                fontWeight: "600",
               }}
             >
-              ➕ Add Items
-            </button>
-            <button
-              onClick={() => setInventoryView("dashboard")}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: inventoryView === "dashboard" ? "#4CAF50" : "#f5f5f5",
-                color: inventoryView === "dashboard" ? "white" : "#333",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: inventoryView === "dashboard" ? "bold" : "normal",
-                borderRadius: "6px",
-              }}
-            >
-              📊 View Dashboard
+              Sign Out
             </button>
           </div>
+          <p style={{ fontSize: "13px", color: "#999", marginBottom: "24px" }}>
+            Logged in as: {currentUserEmail}
+          </p>
 
-          {/* Natural Language Logger */}
-          <NaturalLanguageLogger
-            products={products}
-            onAddProduct={addProductDirectly}
-            onUpdateProduct={updateProduct}
-            onConsumeProduct={handleLogConsumption}
-          />
-
-          {inventoryView === "dashboard" ? (
-            <InventoryDashboard
-              products={products}
-              onUpdateProduct={updateProduct}
-              onDeleteProduct={deleteProduct}
-            />
-          ) : inventoryView === "receipt" ? (
-            <ReceiptScanner onAddItems={handleBulkAddItems} />
-          ) : inventoryView === "barcode" ? (
-            <BarcodeScanner onAddProduct={addProduct} />
-          ) : (
-            <>
-              {/* Inventory Sub-tabs */}
-              <div
+          {/* Main Tab Navigation */}
+          <div
             style={{
               display: "flex",
-              gap: "10px",
-              marginBottom: "20px",
-              borderBottom: "2px solid #ddd",
+              gap: "8px",
+              marginBottom: "24px",
+              borderBottom: "3px solid #ddd",
+              flexWrap: "wrap",
             }}
           >
-            <button
-              onClick={() => setInventoryTab("food")}
-              style={{
-                padding: "12px 24px",
-                backgroundColor: inventoryTab === "food" ? "#4CAF50" : "#f5f5f5",
-                color: inventoryTab === "food" ? "white" : "#333",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: inventoryTab === "food" ? "bold" : "normal",
-                borderRadius: "4px 4px 0 0",
-              }}
-            >
-              🥗 Food & Beverage
-            </button>
-            <button
-              onClick={() => setInventoryTab("cleaning")}
-              style={{
-                padding: "12px 24px",
-                backgroundColor: inventoryTab === "cleaning" ? "#2196F3" : "#f5f5f5",
-                color: inventoryTab === "cleaning" ? "white" : "#333",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: inventoryTab === "cleaning" ? "bold" : "normal",
-                borderRadius: "4px 4px 0 0",
-              }}
-            >
-              🧹 Cleaning & Supplies
-            </button>
+            {[
+              { key: "inventory", label: "📦 Inventory", color: "#4CAF50" },
+              { key: "shopping", label: "🛒 Shopping", color: "#FF6F00" },
+              { key: "consumption", label: "🍽️ Consumption", color: "#9C27B0" },
+              { key: "chores", label: "🧹 Chores", color: "#FF9800" },
+              { key: "analytics", label: "📊 Analytics", color: "#00BCD4" },
+              { key: "ai", label: "🤖 AI Smart", color: "#E91E63" },
+              { key: "members", label: "👥 Members", color: "#673AB7" },
+              { key: "settings", label: "⚙️ Settings", color: "#607D8B" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key as any)}
+                style={{
+                  padding: "14px 24px",
+                  backgroundColor:
+                    activeTab === tab.key ? tab.color : "#f5f5f5",
+                  color: activeTab === tab.key ? "white" : "#333",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: "16px",
+                  fontWeight: activeTab === tab.key ? "bold" : "normal",
+                  borderRadius: "8px 8px 0 0",
+                  transition: "all 0.2s",
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          {/* Forms */}
-          {inventoryTab === "food" ? (
-            <FoodForm
-              name={foodName}
-              quantity={foodQuantity}
-              unit={foodUnit}
-              minStock={foodMinStock}
-              purchased={foodPurchased}
-              useBy={foodUseBy}
-              storage={foodStorage}
-              frequentlyUsed={foodFrequentlyUsed}
-              toBuy={foodToBuy}
-              onNameChange={setFoodName}
-              onQuantityChange={setFoodQuantity}
-              onUnitChange={setFoodUnit}
-              onMinStockChange={setFoodMinStock}
-              onPurchasedChange={setFoodPurchased}
-              onUseByChange={setFoodUseBy}
-              onStorageChange={setFoodStorage}
-              onFrequentlyUsedChange={setFoodFrequentlyUsed}
-              onToBuyChange={setFoodToBuy}
-              onAddProduct={addProduct}
-            />
-          ) : (
-            <CleaningForm
-              name={cleaningName}
-              quantity={cleaningQuantity}
-              unit={cleaningUnit}
-              minStock={cleaningMinStock}
-              purchased={cleaningPurchased}
-              storage={cleaningStorage}
-              frequentlyUsed={cleaningFrequentlyUsed}
-              toBuy={cleaningToBuy}
-              onNameChange={setCleaningName}
-              onQuantityChange={setCleaningQuantity}
-              onUnitChange={setCleaningUnit}
-              onMinStockChange={setCleaningMinStock}
-              onPurchasedChange={setCleaningPurchased}
-              onStorageChange={setCleaningStorage}
-              onFrequentlyUsedChange={setCleaningFrequentlyUsed}
-              onToBuyChange={setCleaningToBuy}
-              onAddProduct={addProduct}
-            />
+          {/* Scanner Buttons (always visible) */}
+          {activeTab === "inventory" && (
+            <div
+              style={{
+                marginBottom: "20px",
+                textAlign: "right",
+                display: "flex",
+                gap: "10px",
+                justifyContent: "flex-end",
+              }}
+            >
+              <button
+                onClick={() => setInventoryView("receipt")}
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor:
+                    inventoryView === "receipt" ? "#2196F3" : "#f5f5f5",
+                  color: inventoryView === "receipt" ? "white" : "#333",
+                  border: "1px solid #ddd",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: inventoryView === "receipt" ? "bold" : "normal",
+                  borderRadius: "6px",
+                }}
+              >
+                📸 Scan Receipt
+              </button>
+              <button
+                onClick={() => setInventoryView("barcode")}
+                style={{
+                  padding: "12px 24px",
+                  backgroundColor:
+                    inventoryView === "barcode" ? "#4CAF50" : "#f5f5f5",
+                  color: inventoryView === "barcode" ? "white" : "#333",
+                  border: "1px solid #ddd",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: inventoryView === "barcode" ? "bold" : "normal",
+                  borderRadius: "6px",
+                }}
+              >
+                📷 Scan Barcode
+              </button>
+            </div>
           )}
 
-          <ProductList 
-            products={products} 
-            onUse={() => {}} 
-            onDelete={deleteProduct}
-            onEdit={updateProduct}
-          />
+          {/* Active user indicator - Always visible */}
+          {activeUser && (
+            <div
+              style={{
+                padding: "12px 20px",
+                backgroundColor: activeUser.color,
+                color: "white",
+                borderRadius: "8px",
+                marginBottom: "20px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
+              }}
+            >
+              <span style={{ fontSize: "24px" }}>{activeUser.avatar}</span>
+              Active User: {activeUser.name}
+            </div>
+          )}
+
+          {/* Content based on active tab */}
+          {activeTab === "inventory" && (
+            <>
+              {/* View Toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  marginBottom: "20px",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={() => setInventoryView("form")}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor:
+                      inventoryView === "form" ? "#4CAF50" : "#f5f5f5",
+                    color: inventoryView === "form" ? "white" : "#333",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: inventoryView === "form" ? "bold" : "normal",
+                    borderRadius: "6px",
+                  }}
+                >
+                  ➕ Add Items
+                </button>
+                <button
+                  onClick={() => setInventoryView("dashboard")}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor:
+                      inventoryView === "dashboard" ? "#4CAF50" : "#f5f5f5",
+                    color: inventoryView === "dashboard" ? "white" : "#333",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight:
+                      inventoryView === "dashboard" ? "bold" : "normal",
+                    borderRadius: "6px",
+                  }}
+                >
+                  📊 View Dashboard
+                </button>
+              </div>
+
+              {/* Natural Language Logger */}
+              <NaturalLanguageLogger
+                products={products}
+                onAddProduct={addProductDirectly}
+                onUpdateProduct={updateProduct}
+                onConsumeProduct={handleLogConsumption}
+              />
+
+              {inventoryView === "dashboard" ? (
+                <InventoryDashboard
+                  products={products}
+                  onUpdateProduct={updateProduct}
+                  onDeleteProduct={deleteProduct}
+                />
+              ) : inventoryView === "receipt" ? (
+                <ReceiptScanner onAddItems={handleBulkAddItems} />
+              ) : inventoryView === "barcode" ? (
+                <BarcodeScanner onAddProduct={addProduct} />
+              ) : (
+                <>
+                  {/* Inventory Sub-tabs */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      marginBottom: "20px",
+                      borderBottom: "2px solid #ddd",
+                    }}
+                  >
+                    <button
+                      onClick={() => setInventoryTab("food")}
+                      style={{
+                        padding: "12px 24px",
+                        backgroundColor:
+                          inventoryTab === "food" ? "#4CAF50" : "#f5f5f5",
+                        color: inventoryTab === "food" ? "white" : "#333",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        fontWeight: inventoryTab === "food" ? "bold" : "normal",
+                        borderRadius: "4px 4px 0 0",
+                      }}
+                    >
+                      🥗 Food & Beverage
+                    </button>
+                    <button
+                      onClick={() => setInventoryTab("cleaning")}
+                      style={{
+                        padding: "12px 24px",
+                        backgroundColor:
+                          inventoryTab === "cleaning" ? "#2196F3" : "#f5f5f5",
+                        color: inventoryTab === "cleaning" ? "white" : "#333",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "16px",
+                        fontWeight:
+                          inventoryTab === "cleaning" ? "bold" : "normal",
+                        borderRadius: "4px 4px 0 0",
+                      }}
+                    >
+                      🧹 Cleaning & Supplies
+                    </button>
+                  </div>
+
+                  {/* Forms */}
+                  {inventoryTab === "food" ? (
+                    <FoodForm
+                      name={foodName}
+                      quantity={foodQuantity}
+                      unit={foodUnit}
+                      minStock={foodMinStock}
+                      purchased={foodPurchased}
+                      useBy={foodUseBy}
+                      storage={foodStorage}
+                      frequentlyUsed={foodFrequentlyUsed}
+                      toBuy={foodToBuy}
+                      onNameChange={setFoodName}
+                      onQuantityChange={setFoodQuantity}
+                      onUnitChange={setFoodUnit}
+                      onMinStockChange={setFoodMinStock}
+                      onPurchasedChange={setFoodPurchased}
+                      onUseByChange={setFoodUseBy}
+                      onStorageChange={setFoodStorage}
+                      onFrequentlyUsedChange={setFoodFrequentlyUsed}
+                      onToBuyChange={setFoodToBuy}
+                      onAddProduct={addProduct}
+                    />
+                  ) : (
+                    <CleaningForm
+                      name={cleaningName}
+                      quantity={cleaningQuantity}
+                      unit={cleaningUnit}
+                      minStock={cleaningMinStock}
+                      purchased={cleaningPurchased}
+                      storage={cleaningStorage}
+                      frequentlyUsed={cleaningFrequentlyUsed}
+                      toBuy={cleaningToBuy}
+                      onNameChange={setCleaningName}
+                      onQuantityChange={setCleaningQuantity}
+                      onUnitChange={setCleaningUnit}
+                      onMinStockChange={setCleaningMinStock}
+                      onPurchasedChange={setCleaningPurchased}
+                      onStorageChange={setCleaningStorage}
+                      onFrequentlyUsedChange={setCleaningFrequentlyUsed}
+                      onToBuyChange={setCleaningToBuy}
+                      onAddProduct={addProduct}
+                    />
+                  )}
+
+                  <ProductList
+                    products={products}
+                    onUse={() => {}}
+                    onDelete={deleteProduct}
+                    onEdit={updateProduct}
+                  />
+                </>
+              )}
             </>
           )}
-        </>
-      )}
 
-      {activeTab === "shopping" && (
-        <ShoppingList
-          products={products}
-          onMarkPurchased={handleMarkItemPurchased}
-          onRemoveFromList={handleRemoveFromShoppingList}
-        />
-      )}
+          {activeTab === "shopping" && (
+            <ShoppingList
+              products={products}
+              onMarkPurchased={handleMarkItemPurchased}
+              onRemoveFromList={handleRemoveFromShoppingList}
+            />
+          )}
 
-      {activeTab === "consumption" && (
-        <ConsumptionLogger
-          products={products}
-          activeUser={activeUser}
-          onLogConsumption={handleLogConsumption}
-        />
-      )}
+          {activeTab === "consumption" && (
+            <ConsumptionLogger
+              products={products}
+              activeUser={activeUser}
+              onLogConsumption={handleLogConsumption}
+            />
+          )}
 
-      {activeTab === "chores" && (
-        <ChoresDashboard
-          chores={chores}
-          products={products}
-          activeUser={activeUser}
-          onAddChore={handleAddChore}
-          onUpdateChore={handleUpdateChore}
-          onCompleteChore={handleCompleteChore}
-          onDeleteChore={handleDeleteChore}
-        />
-      )}
+          {activeTab === "chores" && (
+            <ChoresDashboard
+              chores={chores}
+              products={products}
+              activeUser={activeUser}
+              onAddChore={handleAddChore}
+              onUpdateChore={handleUpdateChore}
+              onCompleteChore={handleCompleteChore}
+              onDeleteChore={handleDeleteChore}
+            />
+          )}
 
-      {activeTab === "analytics" && (
-        <AnalyticsDashboard
-          consumptionLogs={consumptionLogs}
-          users={users}
-          products={products}
-        />
-      )}
+          {activeTab === "analytics" && (
+            <AnalyticsDashboard
+              consumptionLogs={consumptionLogs}
+              users={users}
+              products={products}
+            />
+          )}
 
-      {activeTab === "ai" && (
-        <SuggestionsPanel
-          products={products}
-          chores={chores}
-          consumptionLogs={consumptionLogs}
-          onProductUpdate={updateProduct}
-        />
-      )}
+          {activeTab === "ai" && (
+            <SuggestionsPanel
+              products={products}
+              chores={chores}
+              consumptionLogs={consumptionLogs}
+              onProductUpdate={updateProduct}
+            />
+          )}
 
-      {activeTab === "members" && (
-        <UserManagement
-          users={users}
-          activeUser={activeUser}
-          onSelectUser={handleSelectUser}
-          onAddUser={handleAddUser}
-        />
-      )}
+          {activeTab === "members" && (
+            <UserManagement
+              users={users}
+              activeUser={activeUser}
+              onSelectUser={handleSelectUser}
+              onAddUser={handleAddUser}
+            />
+          )}
 
-      {activeTab === "settings" && householdId && (
-        <div>
-          <h2 style={{ marginBottom: "20px", color: "#333" }}>⚙️ Settings & Backup</h2>
-          
-          <div
-            style={{
-              padding: "20px",
-              backgroundColor: "#e3f2fd",
-              borderRadius: "8px",
-              marginBottom: "20px",
-            }}
-          >
-            <h3 style={{ marginBottom: "10px", color: "#1976d2" }}>☁️ Cloud Sync Status</h3>
-            <p style={{ color: "#666" }}>
-              Your household data is automatically syncing to the cloud in real-time.
-              All changes are backed up instantly and synced across all devices.
-            </p>
-          </div>
+          {activeTab === "settings" && householdId && (
+            <div>
+              <h2 style={{ marginBottom: "20px", color: "#333" }}>
+                ⚙️ Settings & Backup
+              </h2>
 
-          <RoomCategoryManagement
-            rooms={rooms}
-            categories={choreCategories}
-            onAddRoom={handleAddRoom}
-            onAddCategory={handleAddCategory}
-            onDeleteRoom={handleDeleteRoom}
-            onDeleteCategory={handleDeleteCategory}
-          />
+              <div
+                style={{
+                  padding: "20px",
+                  backgroundColor: "#e3f2fd",
+                  borderRadius: "8px",
+                  marginBottom: "20px",
+                }}
+              >
+                <h3 style={{ marginBottom: "10px", color: "#1976d2" }}>
+                  ☁️ Cloud Sync Status
+                </h3>
+                <p style={{ color: "#666" }}>
+                  Your household data is automatically syncing to the cloud in
+                  real-time. All changes are backed up instantly and synced
+                  across all devices.
+                </p>
+              </div>
 
-          <div style={{ marginTop: "40px" }}>
-            <DataBackup householdId={householdId} />
-          </div>
+              <RoomCategoryManagement
+                rooms={rooms}
+                categories={choreCategories}
+                onAddRoom={handleAddRoom}
+                onAddCategory={handleAddCategory}
+                onDeleteRoom={handleDeleteRoom}
+                onDeleteCategory={handleDeleteCategory}
+              />
+
+              <div style={{ marginTop: "40px" }}>
+                <DataBackup householdId={householdId} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div>
+              <h2 style={{ marginBottom: "20px", color: "#333" }}>
+                ⚙️ Settings & Backup
+              </h2>
+
+              <div
+                style={{
+                  padding: "20px",
+                  backgroundColor: "#e8f5e9",
+                  borderRadius: "8px",
+                  marginBottom: "20px",
+                }}
+              >
+                <h3 style={{ marginBottom: "10px", color: "#2e7d32" }}>
+                  ✅ Supabase Connected
+                </h3>
+                <p style={{ color: "#666", marginBottom: "10px" }}>
+                  Data is synced to PostgreSQL via Supabase. Changes are
+                  reflected across all devices in real-time.
+                </p>
+              </div>
+
+              <RoomCategoryManagement
+                rooms={rooms}
+                categories={choreCategories}
+                onAddRoom={handleAddRoom}
+                onAddCategory={handleAddCategory}
+                onDeleteRoom={handleDeleteRoom}
+                onDeleteCategory={handleDeleteCategory}
+              />
+            </div>
+          )}
         </div>
       )}
-
-      {activeTab === "settings" && (
-        <div>
-          <h2 style={{ marginBottom: "20px", color: "#333" }}>⚙️ Settings & Backup</h2>
-          
-          <div
-            style={{
-              padding: "20px",
-              backgroundColor: "#e8f5e9",
-              borderRadius: "8px",
-              marginBottom: "20px",
-            }}
-          >
-            <h3 style={{ marginBottom: "10px", color: "#2e7d32" }}>✅ Supabase Connected</h3>
-            <p style={{ color: "#666", marginBottom: "10px" }}>
-              Data is synced to PostgreSQL via Supabase. Changes are reflected across all devices in real-time.
-            </p>
-          </div>
-
-          <RoomCategoryManagement
-            rooms={rooms}
-            categories={choreCategories}
-            onAddRoom={handleAddRoom}
-            onAddCategory={handleAddCategory}
-            onDeleteRoom={handleDeleteRoom}
-            onDeleteCategory={handleDeleteCategory}
-          />
-        </div>
-      )}
-    </div>
+    </>
   );
 }
 
