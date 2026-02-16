@@ -74,12 +74,13 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         backgroundColor: "#f5f5f5",
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen'",
+        padding: "20px",
       }}
     >
       <div
         style={{
           backgroundColor: "white",
-          padding: "40px",
+          padding: window.innerWidth < 768 ? "25px" : "40px",
           borderRadius: "8px",
           boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
           width: "100%",

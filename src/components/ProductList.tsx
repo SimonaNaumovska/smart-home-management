@@ -15,203 +15,236 @@ export function ProductList({
   onEdit,
 }: ProductListProps) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  return (
-    <>
-      <h2>Products</h2>
 
-      {products.length === 0 ? (
-        <p>No products yet.</p>
-      ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table
+  const renderCardView = () => (
+    <div className="card-view">
+      {products.map((product) => {
+        const isLowStock = product.quantity <= product.minStock;
+        const isExpired = product.useBy && new Date(product.useBy) < new Date();
+
+        return (
+          <div
+            key={product.id}
+            className="product-card"
             style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "14px",
+              borderLeft: isLowStock
+                ? "4px solid #f44336"
+                : isExpired
+                  ? "4px solid #ff9800"
+                  : "4px solid #4caf50",
             }}
           >
-            <thead>
-              <tr
+            <div className="product-card-header">
+              <div style={{ flex: 1 }}>
+                <h3 className="product-card-title">{product.name}</h3>
+                <span className="product-card-category">
+                  {product.category}
+                </span>
+              </div>
+              {isLowStock && (
+                <span
+                  className="badge badge-danger"
+                  style={{ fontSize: "11px" }}
+                >
+                  LOW STOCK
+                </span>
+              )}
+              {isExpired && (
+                <span
+                  className="badge badge-warning"
+                  style={{ fontSize: "11px" }}
+                >
+                  EXPIRED
+                </span>
+              )}
+            </div>
+
+            <div className="product-card-body">
+              <div className="product-card-field">
+                <span className="product-card-label">Quantity</span>
+                <span
+                  className="product-card-value"
+                  style={{
+                    color: isLowStock ? "#f44336" : "#333",
+                    fontWeight: isLowStock ? "bold" : "normal",
+                  }}
+                >
+                  {product.quantity} {product.unit}
+                </span>
+              </div>
+
+              <div className="product-card-field">
+                <span className="product-card-label">Min Stock</span>
+                <span className="product-card-value">
+                  {product.minStock} {product.unit}
+                </span>
+              </div>
+
+              <div className="product-card-field">
+                <span className="product-card-label">Storage</span>
+                <span className="product-card-value">
+                  {product.storage || "—"}
+                </span>
+              </div>
+
+              <div className="product-card-field">
+                <span className="product-card-label">Purchased</span>
+                <span className="product-card-value">
+                  {product.purchased || "—"}
+                </span>
+              </div>
+
+              {product.useBy && (
+                <div className="product-card-field">
+                  <span className="product-card-label">Use By</span>
+                  <span
+                    className="product-card-value"
+                    style={{
+                      color: isExpired ? "#f44336" : "#333",
+                      fontWeight: isExpired ? "bold" : "normal",
+                    }}
+                  >
+                    {product.useBy}
+                  </span>
+                </div>
+              )}
+
+              <div className="product-card-field">
+                <span className="product-card-label">Status</span>
+                <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                  {product.toBuy && (
+                    <span className="badge badge-info">To Buy</span>
+                  )}
+                  {product.frequentlyUsed && (
+                    <span className="badge badge-secondary">⭐ Frequent</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="product-card-actions">
+              <button
+                onClick={() => {
+                  const amount = Number(prompt("How much used?"));
+                  if (!isNaN(amount) && amount > 0) {
+                    onUse(product.id, amount);
+                  }
+                }}
                 style={{
-                  backgroundColor: "#f5f5f5",
-                  borderBottom: "2px solid #ddd",
+                  backgroundColor: "#4caf50",
+                  color: "white",
                 }}
               >
-                <th
+                📝 Use
+              </button>
+              <button
+                onClick={() => setEditingProduct(product)}
+                style={{
+                  backgroundColor: "#2196f3",
+                  color: "white",
+                }}
+              >
+                ✏️ Edit
+              </button>
+              <button
+                onClick={() => onDelete(product.id)}
+                style={{
+                  backgroundColor: "#f44336",
+                  color: "white",
+                }}
+              >
+                🗑️ Delete
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  const renderTableView = () => (
+    <div className="table-view table-container">
+      <table className="responsive-table">
+        <thead>
+          <tr>
+            <th>Item Name</th>
+            <th>Category</th>
+            <th style={{ textAlign: "center" }}>Qty</th>
+            <th>Unit</th>
+            <th>Stock Level</th>
+            <th>Storage</th>
+            <th>Purchased</th>
+            <th>Use By</th>
+            <th style={{ textAlign: "center" }}>To Buy?</th>
+            <th style={{ textAlign: "center" }}>Frequent?</th>
+            <th style={{ textAlign: "center" }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => {
+            const isLowStock = product.quantity <= product.minStock;
+            const isExpired =
+              product.useBy && new Date(product.useBy) < new Date();
+
+            return (
+              <tr
+                key={product.id}
+                style={{
+                  backgroundColor: isExpired
+                    ? "#ffebee"
+                    : isLowStock
+                      ? "#fff3e0"
+                      : "white",
+                }}
+              >
+                <td style={{ fontWeight: "600" }}>{product.name}</td>
+                <td>{product.category}</td>
+                <td style={{ textAlign: "center", fontWeight: "600" }}>
+                  {product.quantity}
+                </td>
+                <td>{product.unit}</td>
+                <td>
+                  {isLowStock ? (
+                    <span className="badge badge-danger">
+                      Low ({product.quantity}/{product.minStock})
+                    </span>
+                  ) : (
+                    <span className="badge badge-success">
+                      OK ({product.quantity}/{product.minStock})
+                    </span>
+                  )}
+                </td>
+                <td>{product.storage || "—"}</td>
+                <td>{product.purchased || "—"}</td>
+                <td
                   style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
+                    color: isExpired ? "#f44336" : "#333",
+                    fontWeight: isExpired ? "bold" : "normal",
                   }}
                 >
-                  Item Name
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Category
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "center",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Qty
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Unit
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Stock Level
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Storage
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Purchased
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "left",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Use By
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "center",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  To Buy?
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "center",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Frequently Used?
-                </th>
-                <th
-                  style={{
-                    padding: "8px",
-                    textAlign: "center",
-                    border: "1px solid #ddd",
-                  }}
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product.id} style={{ borderBottom: "1px solid #ddd" }}>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.name}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.category}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {product.quantity}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.unit}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.quantity <= product.minStock ? (
-                      <span style={{ color: "#dc3545", fontWeight: "bold" }}>
-                        Low ({product.quantity}/{product.minStock})
-                      </span>
+                  {product.useBy ? (
+                    isExpired ? (
+                      <span>⚠️ {product.useBy}</span>
                     ) : (
-                      <span style={{ color: "#28a745" }}>
-                        OK ({product.quantity}/{product.minStock})
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.storage}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.purchased || "—"}
-                  </td>
-                  <td style={{ padding: "8px", border: "1px solid #ddd" }}>
-                    {product.useBy ? (
-                      new Date(product.useBy) < new Date() ? (
-                        <span style={{ color: "#dc3545", fontWeight: "bold" }}>
-                          Expired
-                        </span>
-                      ) : (
-                        product.useBy
-                      )
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td
+                      product.useBy
+                    )
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  {product.toBuy ? "✅" : ""}
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  {product.frequentlyUsed ? "⭐" : ""}
+                </td>
+                <td style={{ textAlign: "center" }}>
+                  <div
                     style={{
-                      padding: "8px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {product.toBuy ? "✓" : ""}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
-                    }}
-                  >
-                    {product.frequentlyUsed ? "★" : ""}
-                  </td>
-                  <td
-                    style={{
-                      padding: "8px",
-                      border: "1px solid #ddd",
-                      textAlign: "center",
+                      display: "flex",
+                      gap: "4px",
+                      justifyContent: "center",
+                      flexWrap: "wrap",
                     }}
                   >
                     <button
@@ -222,9 +255,10 @@ export function ProductList({
                         }
                       }}
                       style={{
-                        marginRight: "4px",
-                        padding: "4px 8px",
-                        cursor: "pointer",
+                        padding: "6px 10px",
+                        backgroundColor: "#4caf50",
+                        color: "white",
+                        fontSize: "12px",
                       }}
                     >
                       Use
@@ -232,13 +266,10 @@ export function ProductList({
                     <button
                       onClick={() => setEditingProduct(product)}
                       style={{
-                        marginRight: "4px",
-                        padding: "4px 8px",
-                        backgroundColor: "#007bff",
+                        padding: "6px 10px",
+                        backgroundColor: "#2196f3",
                         color: "white",
-                        border: "none",
-                        cursor: "pointer",
-                        borderRadius: "3px",
+                        fontSize: "12px",
                       }}
                     >
                       Edit
@@ -246,22 +277,35 @@ export function ProductList({
                     <button
                       onClick={() => onDelete(product.id)}
                       style={{
-                        padding: "4px 8px",
-                        backgroundColor: "#dc3545",
+                        padding: "6px 10px",
+                        backgroundColor: "#f44336",
                         color: "white",
-                        border: "none",
-                        cursor: "pointer",
-                        borderRadius: "3px",
+                        fontSize: "12px",
                       }}
                     >
-                      Delete
+                      Del
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <>
+      <h2>Products</h2>
+
+      {products.length === 0 ? (
+        <p>No products yet.</p>
+      ) : (
+        <>
+          {renderCardView()}
+          {renderTableView()}
+        </>
       )}
 
       {/* Edit Modal */}
@@ -328,11 +372,13 @@ function EditProductModal({
       style={{
         backgroundColor: "white",
         borderRadius: "8px",
-        padding: "30px",
-        maxWidth: "500px",
+        padding: window.innerWidth < 768 ? "20px" : "30px",
+        width: window.innerWidth < 768 ? "calc(100% - 40px)" : "auto",
+        maxWidth: window.innerWidth < 768 ? "none" : "500px",
         maxHeight: "90vh",
         overflowY: "auto",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
+        margin: window.innerWidth < 768 ? "20px" : "0",
       }}
       onClick={(e) => e.stopPropagation()}
     >

@@ -63,190 +63,122 @@ export function FoodForm({
   onAddProduct,
 }: FoodFormProps) {
   return (
-    <div
-      style={{
-        padding: "20px",
-        border: "1px solid #4CAF50",
-        borderRadius: "8px",
-        backgroundColor: "#f1f8f4",
-        marginBottom: "20px",
-      }}
-    >
-      <h2 style={{ color: "#2e7d32" }}>🥗 Food & Beverage</h2>
-      <p style={{ color: "#555", fontSize: "14px" }}>
-        Track your groceries, pantry items, and perishables
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "12px",
-          marginBottom: "12px",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Item Name (e.g., Milk, Bread, Chicken)"
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 100%",
-            minWidth: "200px",
-          }}
-        />
-
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => onQuantityChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        />
-
-        <select
-          value={unit}
-          onChange={(e) => onUnitChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        >
-          <option value="">Select Unit</option>
-          {FOOD_UNITS.map((u) => (
-            <option key={u} value={u}>
-              {u}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="number"
-          placeholder="Min Stock Level"
-          value={minStock}
-          onChange={(e) => onMinStockChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        />
-
-        <input
-          type="date"
-          placeholder="Purchased"
-          value={purchased}
-          onChange={(e) => onPurchasedChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        />
-
-        <input
-          type="date"
-          placeholder="Use By (Expiration)"
-          value={useBy}
-          onChange={(e) => onUseByChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        />
-
-        <select
-          value={storage}
-          onChange={(e) => onStorageChange(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            flex: "1 1 100%",
-            minWidth: "200px",
-          }}
-        >
-          <option value="">Select Storage Location</option>
-          {FOOD_STORAGE_LOCATIONS.map((loc) => (
-            <option key={loc} value={loc}>
-              {loc}
-            </option>
-          ))}
-        </select>
-
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px",
-            borderRadius: "4px",
-            backgroundColor: "white",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={frequentlyUsed}
-            onChange={(e) => onFrequentlyUsedChange(e.target.checked)}
-          />
-          <span>Frequently Used</span>
-        </label>
-
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px",
-            borderRadius: "4px",
-            backgroundColor: "white",
-            flex: "1 1 calc(50% - 6px)",
-            minWidth: "150px",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={toBuy}
-            onChange={(e) => onToBuyChange(e.target.checked)}
-          />
-          <span>Add to Shopping List</span>
-        </label>
+    <div className="compact-form food-form">
+      <div className="form-header">
+        <h3>🥗 Add Food Item</h3>
       </div>
 
-      <button
-        onClick={onAddProduct}
-        style={{
-          padding: "10px 24px",
-          backgroundColor: "#4CAF50",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          fontSize: "16px",
-          fontWeight: "bold",
-        }}
-      >
+      <div className="form-grid">
+        {/* Row 1: Item Name, Quantity, Unit, Min Stock */}
+        <div className="form-field col-3">
+          <label className="form-label">Item Name</label>
+          <input
+            type="text"
+            placeholder="Enter item name"
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Quantity</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={quantity}
+            onChange={(e) => onQuantityChange(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Unit</label>
+          <select
+            value={unit}
+            onChange={(e) => onUnitChange(e.target.value)}
+            className="form-input"
+          >
+            <option value="">Select</option>
+            {FOOD_UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-field">
+          <label className="form-label">Min Stock</label>
+          <input
+            type="number"
+            placeholder="0"
+            value={minStock}
+            onChange={(e) => onMinStockChange(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        {/* Row 2: Storage Location, Purchase Date, Expiry Date */}
+        <div className="form-field col-2">
+          <label className="form-label">Storage Location</label>
+          <select
+            value={storage}
+            onChange={(e) => onStorageChange(e.target.value)}
+            className="form-input"
+          >
+            <option value="">Select location</option>
+            {FOOD_STORAGE_LOCATIONS.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-field col-2">
+          <label className="form-label">Purchase Date</label>
+          <input
+            type="date"
+            value={purchased}
+            onChange={(e) => onPurchasedChange(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        <div className="form-field col-2">
+          <label className="form-label">Expiry Date</label>
+          <input
+            type="date"
+            value={useBy}
+            onChange={(e) => onUseByChange(e.target.value)}
+            className="form-input"
+          />
+        </div>
+
+        {/* Row 3: Checkboxes */}
+        <div className="form-checkboxes">
+          <label className="form-checkbox-small">
+            <input
+              type="checkbox"
+              checked={frequentlyUsed}
+              onChange={(e) => onFrequentlyUsedChange(e.target.checked)}
+            />
+            <span>Frequently Used</span>
+          </label>
+
+          <label className="form-checkbox-small">
+            <input
+              type="checkbox"
+              checked={toBuy}
+              onChange={(e) => onToBuyChange(e.target.checked)}
+            />
+            <span>Add to Shopping List</span>
+          </label>
+        </div>
+      </div>
+
+      <button onClick={onAddProduct} className="form-submit food">
         Add Food Item
       </button>
     </div>

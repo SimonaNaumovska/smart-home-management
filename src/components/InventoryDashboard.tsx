@@ -285,128 +285,241 @@ export function InventoryDashboard({
       </div>
 
       {/* Inventory Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            backgroundColor: "white",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            borderRadius: "8px",
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#4CAF50", color: "white" }}>
-              <th
+      {/* Card View - Mobile */}
+      <div className="card-view">
+        {sortedProducts.length === 0 ? (
+          <div
+            style={{
+              padding: "40px",
+              textAlign: "center",
+              color: "#999",
+              fontSize: "16px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+            }}
+          >
+            No items found. Add products using the Food or Cleaning forms.
+          </div>
+        ) : (
+          sortedProducts.map((product) => {
+            const stockLevel = getStockLevel(product);
+            const stockColor = getStockLevelColor(stockLevel);
+            const expired = isExpired(product);
+            const expiringSoon = expiresSoon(product);
+
+            return (
+              <div
+                key={product.id}
+                className="product-card"
                 style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                  cursor: "pointer",
+                  borderLeft: expired
+                    ? "4px solid #f44336"
+                    : expiringSoon
+                      ? "4px solid #ff9800"
+                      : stockLevel === "Low" || stockLevel === "None"
+                        ? "4px solid #ff9800"
+                        : "4px solid #4caf50",
+                  backgroundColor: expired
+                    ? "#ffebee"
+                    : expiringSoon
+                      ? "#fff9c4"
+                      : "white",
                 }}
-                onClick={() => handleSort("name")}
               >
+                <div className="product-card-header">
+                  <div style={{ flex: 1 }}>
+                    <h3 className="product-card-title">{product.name}</h3>
+                    <span className="product-card-category">
+                      {product.category}
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "4px",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    {expired && (
+                      <span
+                        className="badge badge-danger"
+                        style={{ fontSize: "10px" }}
+                      >
+                        ⚠️ EXPIRED
+                      </span>
+                    )}
+                    {expiringSoon && !expired && (
+                      <span
+                        className="badge badge-warning"
+                        style={{ fontSize: "10px" }}
+                      >
+                        ⏰ SOON
+                      </span>
+                    )}
+                    <span
+                      className="badge"
+                      style={{
+                        backgroundColor: stockColor,
+                        color: "white",
+                        fontSize: "10px",
+                      }}
+                    >
+                      {stockLevel}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="product-card-body">
+                  <div className="product-card-field">
+                    <span className="product-card-label">Quantity</span>
+                    <span
+                      className="product-card-value"
+                      style={{
+                        color: product.quantity === 0 ? "#f44336" : "#333",
+                        fontWeight: "bold",
+                        fontSize: "16px",
+                      }}
+                    >
+                      {product.quantity.toFixed(2)} {product.unit}
+                    </span>
+                  </div>
+
+                  <div className="product-card-field">
+                    <span className="product-card-label">Storage</span>
+                    <span className="product-card-value">
+                      {product.storage || "—"}
+                    </span>
+                  </div>
+
+                  <div className="product-card-field">
+                    <span className="product-card-label">Purchased</span>
+                    <span className="product-card-value">
+                      {product.purchased || "—"}
+                    </span>
+                  </div>
+
+                  <div className="product-card-field">
+                    <span className="product-card-label">Use By</span>
+                    <span
+                      className="product-card-value"
+                      style={{
+                        color: expired
+                          ? "#f44336"
+                          : expiringSoon
+                            ? "#ff9800"
+                            : "#333",
+                        fontWeight: expired || expiringSoon ? "bold" : "normal",
+                      }}
+                    >
+                      {product.useBy || "—"}
+                    </span>
+                  </div>
+
+                  <div className="product-card-field">
+                    <span className="product-card-label">To Buy?</span>
+                    <button
+                      onClick={() => handleToggleToBuy(product)}
+                      style={{
+                        padding: "6px 12px",
+                        backgroundColor: product.toBuy ? "#9C27B0" : "#f5f5f5",
+                        color: product.toBuy ? "white" : "#666",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: product.toBuy ? "bold" : "normal",
+                        width: "fit-content",
+                      }}
+                    >
+                      {product.toBuy ? "✓ Yes" : "No"}
+                    </button>
+                  </div>
+
+                  <div className="product-card-field">
+                    <span className="product-card-label">Frequent?</span>
+                    <button
+                      onClick={() => handleToggleFrequentlyUsed(product)}
+                      style={{
+                        padding: "6px 12px",
+                        backgroundColor: product.frequentlyUsed
+                          ? "#FF9800"
+                          : "#f5f5f5",
+                        color: product.frequentlyUsed ? "white" : "#666",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        fontSize: "12px",
+                        fontWeight: product.frequentlyUsed ? "bold" : "normal",
+                        width: "fit-content",
+                      }}
+                    >
+                      {product.frequentlyUsed ? "⭐ Yes" : "No"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="product-card-actions">
+                  <button
+                    onClick={() => {
+                      if (confirm(`Delete ${product.name}?`)) {
+                        onDeleteProduct(product.id);
+                      }
+                    }}
+                    style={{
+                      backgroundColor: "#f44336",
+                      color: "white",
+                    }}
+                  >
+                    🗑️ Delete
+                  </button>
+                  <button
+                    onClick={() => onUpdateProduct({ ...product })}
+                    style={{
+                      backgroundColor: "#2196f3",
+                      color: "white",
+                    }}
+                  >
+                    ✏️ Edit
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Table View - Desktop */}
+      <div className="table-view table-container">
+        <table className="responsive-table">
+          <thead>
+            <tr>
+              <th className="sortable" onClick={() => handleSort("name")}>
                 Item Name{" "}
                 {sortBy === "name" && (sortOrder === "asc" ? "▲" : "▼")}
               </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleSort("category")}
-              >
+              <th className="sortable" onClick={() => handleSort("category")}>
                 Category{" "}
                 {sortBy === "category" && (sortOrder === "asc" ? "▲" : "▼")}
               </th>
+              <th>Storage</th>
               <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Storage
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "right",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                }}
+                className="sortable"
                 onClick={() => handleSort("quantity")}
+                style={{ textAlign: "right" }}
               >
                 Qty #{" "}
                 {sortBy === "quantity" && (sortOrder === "asc" ? "▲" : "▼")}
               </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Unit
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Stock Level
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Purchased
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleSort("useBy")}
-              >
+              <th>Unit</th>
+              <th>Stock Level</th>
+              <th>Purchased</th>
+              <th className="sortable" onClick={() => handleSort("useBy")}>
                 Use By {sortBy === "useBy" && (sortOrder === "asc" ? "▲" : "▼")}
               </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                To Buy?
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Frequently Used?
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Actions
-              </th>
+              <th style={{ textAlign: "center" }}>To Buy?</th>
+              <th style={{ textAlign: "center" }}>Frequent?</th>
+              <th style={{ textAlign: "center" }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -435,7 +548,6 @@ export function InventoryDashboard({
                   <tr
                     key={product.id}
                     style={{
-                      borderBottom: "1px solid #eee",
                       backgroundColor: expired
                         ? "#FFEBEE"
                         : expiringSoon
@@ -443,7 +555,7 @@ export function InventoryDashboard({
                           : "white",
                     }}
                   >
-                    <td style={{ padding: "12px 8px", fontWeight: "bold" }}>
+                    <td style={{ fontWeight: "600" }}>
                       {product.name}
                       {expired && (
                         <span
@@ -470,15 +582,10 @@ export function InventoryDashboard({
                         </span>
                       )}
                     </td>
-                    <td style={{ padding: "12px 8px", color: "#666" }}>
-                      {product.category}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: "#666" }}>
-                      {product.storage}
-                    </td>
+                    <td style={{ color: "#666" }}>{product.category}</td>
+                    <td style={{ color: "#666" }}>{product.storage}</td>
                     <td
                       style={{
-                        padding: "12px 8px",
                         textAlign: "right",
                         fontWeight: "bold",
                         color: product.quantity === 0 ? "#f44336" : "#333",
@@ -486,28 +593,18 @@ export function InventoryDashboard({
                     >
                       {product.quantity.toFixed(2)}
                     </td>
-                    <td style={{ padding: "12px 8px" }}>{product.unit}</td>
-                    <td style={{ padding: "12px 8px" }}>
+                    <td>{product.unit}</td>
+                    <td>
                       <span
-                        style={{
-                          padding: "4px 10px",
-                          backgroundColor: stockColor,
-                          color: "white",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
+                        className="badge"
+                        style={{ backgroundColor: stockColor, color: "white" }}
                       >
                         {stockLevel}
                       </span>
                     </td>
-                    <td style={{ padding: "12px 8px", fontSize: "13px" }}>
-                      {product.purchased || "-"}
-                    </td>
+                    <td>{product.purchased || "-"}</td>
                     <td
                       style={{
-                        padding: "12px 8px",
-                        fontSize: "13px",
                         color: expired
                           ? "#f44336"
                           : expiringSoon
@@ -518,7 +615,7 @@ export function InventoryDashboard({
                     >
                       {product.useBy || "-"}
                     </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                    <td style={{ textAlign: "center" }}>
                       <button
                         onClick={() => handleToggleToBuy(product)}
                         style={{
@@ -537,7 +634,7 @@ export function InventoryDashboard({
                         {product.toBuy ? "✓ Yes" : "No"}
                       </button>
                     </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                    <td style={{ textAlign: "center" }}>
                       <button
                         onClick={() => handleToggleFrequentlyUsed(product)}
                         style={{
@@ -558,7 +655,7 @@ export function InventoryDashboard({
                         {product.frequentlyUsed ? "⭐ Yes" : "No"}
                       </button>
                     </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
+                    <td style={{ textAlign: "center" }}>
                       <button
                         onClick={() => {
                           if (confirm(`Delete ${product.name}?`)) {

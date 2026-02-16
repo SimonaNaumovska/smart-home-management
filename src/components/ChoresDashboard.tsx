@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ChoreDefinition, User, Product } from "../types/Product";
 
 interface ChoresDashboardProps {
@@ -37,14 +37,13 @@ const PRIORITIES = ["01 High", "02 Normal", "03 Low"];
 
 export function ChoresDashboard({
   chores,
-  // products,
   activeUser,
   onAddChore,
   onUpdateChore,
   onCompleteChore,
   onDeleteChore,
 }: ChoresDashboardProps) {
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [choreView, setChoreView] = useState<"dashboard" | "form">("dashboard");
   const [taskName, setTaskName] = useState("");
   const [room, setRoom] = useState("Kitchen");
   const [choreCategory, setChoreCategory] =
@@ -52,6 +51,14 @@ export function ChoresDashboard({
   const [priority, setPriority] =
     useState<ChoreDefinition["priority"]>("02 Normal");
   const [frequency, setFrequency] = useState(1);
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => setIsMobileView(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Calculate status for each chore
   const getStatus = (chore: ChoreDefinition): string => {
@@ -72,11 +79,11 @@ export function ChoresDashboard({
   };
 
   const getStatusColor = (status: string): string => {
-    if (status.includes("OVERDUE")) return "#f44336";
-    if (status.includes("DUE TODAY")) return "#FF9800";
-    if (status.includes("DUE TOMORROW")) return "#FFC107";
-    if (status.includes("NOT SET")) return "#9E9E9E";
-    return "#4CAF50";
+    if (status.includes("OVERDUE")) return "chore-status-overdue";
+    if (status.includes("DUE TODAY")) return "chore-status-today";
+    if (status.includes("DUE TOMORROW")) return "chore-status-tomorrow";
+    if (status.includes("NOT SET")) return "chore-status-notset";
+    return "chore-status-ok";
   };
 
   const handleAddTask = () => {
@@ -103,7 +110,7 @@ export function ChoresDashboard({
 
     onAddChore(newChore);
     setTaskName("");
-    setShowAddForm(false);
+    setChoreView("dashboard");
   };
 
   const handleMarkDone = (chore: ChoreDefinition) => {
@@ -115,7 +122,6 @@ export function ChoresDashboard({
     const today = new Date();
     const todayStr = today.toISOString().split("T")[0];
 
-    // Calculate next due date
     const nextDueDate = new Date(today);
     nextDueDate.setDate(nextDueDate.getDate() + chore.frequency);
     const nextDueStr = nextDueDate.toISOString().split("T")[0];
@@ -130,12 +136,10 @@ export function ChoresDashboard({
 
     onUpdateChore(updatedChore);
 
-    // If chore has consumed products, trigger completion
     if (chore.consumedProducts.length > 0) {
       onCompleteChore(chore.id);
     }
 
-    // Reset done after a moment to allow for repeated marking
     setTimeout(() => {
       onUpdateChore({ ...updatedChore, done: false });
     }, 500);
@@ -148,7 +152,6 @@ export function ChoresDashboard({
       skipDays: chore.skipToday ? 0 : chore.skipDays + 1,
     };
 
-    // If skipping, adjust next due date
     if (!chore.skipToday) {
       const today = new Date();
       const nextDueDate = new Date(today);
@@ -163,7 +166,6 @@ export function ChoresDashboard({
     onUpdateChore({ ...chore, active: !chore.active });
   };
 
-  // Sort chores by status priority
   const sortedChores = [...chores].sort((a, b) => {
     const statusA = getStatus(a);
     const statusB = getStatus(b);
@@ -171,544 +173,368 @@ export function ChoresDashboard({
   });
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "24px",
-        }}
-      >
-        <h2 style={{ margin: 0, fontSize: "28px" }}>🗓️ Chores Dashboard</h2>
-        <button
-          onClick={() => setShowAddForm(!showAddForm)}
-          style={{
-            padding: "12px 24px",
-            backgroundColor: "#FF9800",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "bold",
-          }}
-        >
-          {showAddForm ? "✕ Cancel" : "+ Add Task"}
-        </button>
+    <div className="chores-container">
+      {/* Header */}
+      <div className="chores-header">
+        <h2>🗓️ Chores Management</h2>
       </div>
 
       {!activeUser && (
-        <div
-          style={{
-            padding: "16px",
-            backgroundColor: "#FFF3E0",
-            borderLeft: "4px solid #FF9800",
-            marginBottom: "20px",
-            borderRadius: "4px",
-          }}
-        >
+        <div className="chores-warning">
           ⚠️ Please select an active user to mark tasks as done
         </div>
       )}
 
-      {/* Summary Stats */}
-      <div
-        style={{
-          marginBottom: "24px",
-          display: "flex",
-          gap: "16px",
-          flexWrap: "wrap",
-        }}
-      >
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#FFEBEE",
-            borderRadius: "8px",
-            borderLeft: "4px solid #f44336",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#f44336" }}
-          >
-            {chores.filter((c) => getStatus(c).includes("OVERDUE")).length}
-          </div>
-          <div style={{ color: "#666" }}>Overdue Tasks</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#FFF3E0",
-            borderRadius: "8px",
-            borderLeft: "4px solid #FF9800",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#FF9800" }}
-          >
-            {chores.filter((c) => getStatus(c).includes("DUE TODAY")).length}
-          </div>
-          <div style={{ color: "#666" }}>Due Today</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#E8F5E9",
-            borderRadius: "8px",
-            borderLeft: "4px solid #4CAF50",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#4CAF50" }}
-          >
-            {chores.filter((c) => c.active).length}
-          </div>
-          <div style={{ color: "#666" }}>Active Tasks</div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 200px",
-            padding: "16px",
-            backgroundColor: "#F3E5F5",
-            borderRadius: "8px",
-            borderLeft: "4px solid #9C27B0",
-          }}
-        >
-          <div
-            style={{ fontSize: "24px", fontWeight: "bold", color: "#9C27B0" }}
-          >
-            {chores.filter((c) => c.skipToday).length}
-          </div>
-          <div style={{ color: "#666" }}>Skipped Today</div>
-        </div>
-      </div>
-
-      {/* Add Task Form */}
-      {showAddForm && (
-        <div
-          style={{
-            padding: "24px",
-            backgroundColor: "#FFF8E1",
-            borderRadius: "12px",
-            marginBottom: "24px",
-            border: "2px solid #FF9800",
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>Add New Task</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-            <div style={{ flex: "1 1 calc(50% - 8px)", minWidth: "200px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Task Name *
-              </label>
-              <input
-                type="text"
-                value={taskName}
-                onChange={(e) => setTaskName(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "16px",
-                  border: "2px solid #ddd",
-                  borderRadius: "6px",
-                }}
-                placeholder="e.g., Clean kitchen"
-              />
+      {choreView === "dashboard" ? (
+        <>
+          {/* Statistics Cards */}
+          <div className="chores-stats">
+            <div className="chore-stat-card stat-overdue">
+              <div className="stat-value">
+                {chores.filter((c) => getStatus(c).includes("OVERDUE")).length}
+              </div>
+              <div className="stat-label">Overdue</div>
             </div>
 
-            <div style={{ flex: "1 1 calc(25% - 8px)", minWidth: "150px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Room
-              </label>
-              <select
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "16px",
-                  border: "2px solid #ddd",
-                  borderRadius: "6px",
-                }}
-              >
-                {ROOMS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ flex: "1 1 calc(25% - 8px)", minWidth: "150px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Category
-              </label>
-              <select
-                value={choreCategory}
-                onChange={(e) => {
-                  const cat = e.target
-                    .value as ChoreDefinition["choreCategory"];
-                  setChoreCategory(cat);
-                  const freq =
-                    CATEGORIES.find((c) => c.label === cat)?.days || 1;
-                  setFrequency(freq);
-                }}
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "16px",
-                  border: "2px solid #ddd",
-                  borderRadius: "6px",
-                }}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.label} value={c.label}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ flex: "1 1 calc(25% - 8px)", minWidth: "150px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "8px",
-                  fontWeight: "bold",
-                }}
-              >
-                Priority
-              </label>
-              <select
-                value={priority}
-                onChange={(e) =>
-                  setPriority(e.target.value as ChoreDefinition["priority"])
+            <div className="chore-stat-card stat-today">
+              <div className="stat-value">
+                {
+                  chores.filter((c) => getStatus(c).includes("DUE TODAY"))
+                    .length
                 }
-                style={{
-                  width: "100%",
-                  padding: "10px",
-                  fontSize: "16px",
-                  border: "2px solid #ddd",
-                  borderRadius: "6px",
-                }}
-              >
-                {PRIORITIES.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
+              </div>
+              <div className="stat-label">Due Today</div>
+            </div>
+
+            <div className="chore-stat-card stat-active">
+              <div className="stat-value">
+                {chores.filter((c) => c.active).length}
+              </div>
+              <div className="stat-label">Active</div>
+            </div>
+
+            <div className="chore-stat-card stat-skipped">
+              <div className="stat-value">
+                {chores.filter((c) => c.skipToday).length}
+              </div>
+              <div className="stat-label">Skipped</div>
             </div>
           </div>
 
-          <button
-            onClick={handleAddTask}
-            style={{
-              marginTop: "16px",
-              padding: "12px 32px",
-              backgroundColor: "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontSize: "16px",
-              fontWeight: "bold",
-            }}
-          >
-            Add Task
-          </button>
-        </div>
-      )}
+          {/* Action Toolbar */}
+          <div className="chores-toolbar">
+            <button
+              onClick={() => setChoreView("dashboard")}
+              className="toolbar-icon-btn active"
+            >
+              <span className="btn-icon">📊</span>
+              <span className="btn-label">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setChoreView("form")}
+              className="toolbar-icon-btn"
+            >
+              <span className="btn-icon">➕</span>
+              <span className="btn-label">Add Task</span>
+            </button>
+          </div>
 
-      {/* Chores Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table
-          style={{
-            width: "100%",
-            borderCollapse: "collapse",
-            backgroundColor: "white",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            borderRadius: "8px",
-          }}
-        >
-          <thead>
-            <tr style={{ backgroundColor: "#FF9800", color: "white" }}>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Task
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Room
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Category
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Priority
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Active
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Done
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Skip Today
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Last Done
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Next Due
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "left",
-                  fontSize: "13px",
-                }}
-              >
-                Status
-              </th>
-              <th
-                style={{
-                  padding: "14px 8px",
-                  textAlign: "center",
-                  fontSize: "13px",
-                }}
-              >
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedChores.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={11}
-                  style={{
-                    padding: "40px",
-                    textAlign: "center",
-                    color: "#999",
-                    fontSize: "16px",
-                  }}
-                >
-                  No tasks yet. Click "Add Task" to get started!
-                </td>
-              </tr>
-            ) : (
-              sortedChores.map((chore) => {
-                const status = getStatus(chore);
-                const statusColor = getStatusColor(status);
-
-                return (
-                  <tr
-                    key={chore.id}
-                    style={{
-                      borderBottom: "1px solid #eee",
-                      opacity: chore.active ? 1 : 0.5,
-                      backgroundColor: chore.skipToday ? "#FFF9C4" : "white",
-                    }}
-                  >
-                    <td style={{ padding: "12px 8px", fontWeight: "bold" }}>
-                      {chore.name}
-                    </td>
-                    <td style={{ padding: "12px 8px", color: "#666" }}>
-                      {chore.room}
-                    </td>
-                    <td style={{ padding: "12px 8px" }}>
-                      {chore.choreCategory}
-                    </td>
-                    <td
-                      style={{
-                        padding: "12px 8px",
-                        color: chore.priority.includes("High")
-                          ? "#f44336"
-                          : chore.priority.includes("Low")
-                            ? "#2196F3"
-                            : "#666",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {chore.priority}
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      <button
-                        onClick={() => handleToggleActive(chore)}
-                        style={{
-                          padding: "4px 12px",
-                          backgroundColor: chore.active ? "#4CAF50" : "#9E9E9E",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {chore.active ? "Active" : "Inactive"}
-                      </button>
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      <button
-                        onClick={() => handleMarkDone(chore)}
-                        disabled={!activeUser || !chore.active}
-                        style={{
-                          padding: "6px 16px",
-                          backgroundColor:
-                            activeUser && chore.active ? "#4CAF50" : "#ddd",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor:
-                            activeUser && chore.active
-                              ? "pointer"
-                              : "not-allowed",
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        ✓ Done
-                      </button>
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      <button
-                        onClick={() => handleSkipToday(chore)}
-                        disabled={!chore.active}
-                        style={{
-                          padding: "4px 12px",
-                          backgroundColor: chore.skipToday
-                            ? "#FFC107"
-                            : "#f5f5f5",
-                          color: chore.skipToday ? "white" : "#666",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          cursor: chore.active ? "pointer" : "not-allowed",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {chore.skipToday ? "Skipped" : "Skip"}
-                      </button>
-                    </td>
-                    <td style={{ padding: "12px 8px", fontSize: "13px" }}>
-                      {chore.lastDone || "-"}
-                    </td>
-                    <td style={{ padding: "12px 8px", fontSize: "13px" }}>
-                      {chore.nextDue || "-"}
-                    </td>
-                    <td style={{ padding: "12px 8px" }}>
-                      <span
-                        style={{
-                          padding: "4px 8px",
-                          backgroundColor: statusColor,
-                          color: "white",
-                          borderRadius: "4px",
-                          fontSize: "11px",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "12px 8px", textAlign: "center" }}>
-                      <button
-                        onClick={() => onDeleteChore(chore.id)}
-                        style={{
-                          padding: "4px 8px",
-                          backgroundColor: "#f44336",
-                          color: "white",
-                          border: "none",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          fontSize: "12px",
-                        }}
-                      >
-                        🗑️
-                      </button>
-                    </td>
+          {/* Chores Table - Desktop */}
+          {!isMobileView ? (
+            <div className="chores-table-wrapper">
+              <table className="chores-table">
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th>Room</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th className="th-center">Active</th>
+                    <th className="th-center">Done</th>
+                    <th className="th-center">Skip</th>
+                    <th>Last Done</th>
+                    <th>Next Due</th>
+                    <th>Status</th>
+                    <th className="th-center">Actions</th>
                   </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                </thead>
+                <tbody>
+                  {sortedChores.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="empty-state">
+                        No tasks yet. Click "Add Task" to get started!
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedChores.map((chore) => {
+                      const status = getStatus(chore);
+                      const statusColorClass = getStatusColor(status);
+
+                      return (
+                        <tr
+                          key={chore.id}
+                          className={`chore-row ${!chore.active ? "inactive" : ""} ${chore.skipToday ? "skipped" : ""}`}
+                        >
+                          <td className="chore-name">{chore.name}</td>
+                          <td className="chore-room">{chore.room}</td>
+                          <td>{chore.choreCategory}</td>
+                          <td>
+                            <span
+                              className={`priority-badge ${
+                                chore.priority.includes("High")
+                                  ? "priority-high"
+                                  : chore.priority.includes("Low")
+                                    ? "priority-low"
+                                    : "priority-normal"
+                              }`}
+                            >
+                              {chore.priority}
+                            </span>
+                          </td>
+                          <td className="td-center">
+                            <button
+                              onClick={() => handleToggleActive(chore)}
+                              className={`btn-toggle ${chore.active ? "active" : "inactive"}`}
+                            >
+                              {chore.active ? "Active" : "Inactive"}
+                            </button>
+                          </td>
+                          <td className="td-center">
+                            <button
+                              onClick={() => handleMarkDone(chore)}
+                              disabled={!activeUser || !chore.active}
+                              className="btn-done"
+                            >
+                              ✓ Done
+                            </button>
+                          </td>
+                          <td className="td-center">
+                            <button
+                              onClick={() => handleSkipToday(chore)}
+                              disabled={!chore.active}
+                              className={`btn-skip ${chore.skipToday ? "skipped" : ""}`}
+                            >
+                              {chore.skipToday ? "Skipped" : "Skip"}
+                            </button>
+                          </td>
+                          <td className="chore-date">
+                            {chore.lastDone || "-"}
+                          </td>
+                          <td className="chore-date">{chore.nextDue || "-"}</td>
+                          <td>
+                            <span
+                              className={`status-badge ${statusColorClass}`}
+                            >
+                              {status}
+                            </span>
+                          </td>
+                          <td className="td-center">
+                            <button
+                              onClick={() => onDeleteChore(chore.id)}
+                              className="btn-delete"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Chores Cards - Mobile */
+            <div className="chores-cards-mobile">
+              {sortedChores.length === 0 ? (
+                <div className="empty-state-mobile">
+                  No tasks yet. Click "Add Task" to get started!
+                </div>
+              ) : (
+                sortedChores.map((chore) => {
+                  const status = getStatus(chore);
+                  const statusColorClass = getStatusColor(status);
+
+                  return (
+                    <div
+                      key={chore.id}
+                      className={`chore-card ${!chore.active ? "inactive" : ""} ${chore.skipToday ? "skipped" : ""}`}
+                    >
+                      <div className="chore-card-header">
+                        <div className="chore-card-title">{chore.name}</div>
+                        <span className={`status-badge ${statusColorClass}`}>
+                          {status}
+                        </span>
+                      </div>
+
+                      <div className="chore-card-info">
+                        <div className="chore-info-item">
+                          <span className="info-label">Room:</span>
+                          <span>{chore.room}</span>
+                        </div>
+                        <div className="chore-info-item">
+                          <span className="info-label">Category:</span>
+                          <span>{chore.choreCategory}</span>
+                        </div>
+                        <div className="chore-info-item">
+                          <span className="info-label">Priority:</span>
+                          <span
+                            className={`priority-badge ${
+                              chore.priority.includes("High")
+                                ? "priority-high"
+                                : chore.priority.includes("Low")
+                                  ? "priority-low"
+                                  : "priority-normal"
+                            }`}
+                          >
+                            {chore.priority}
+                          </span>
+                        </div>
+                        <div className="chore-info-item">
+                          <span className="info-label">Last Done:</span>
+                          <span>{chore.lastDone || "-"}</span>
+                        </div>
+                        <div className="chore-info-item">
+                          <span className="info-label">Next Due:</span>
+                          <span>{chore.nextDue || "-"}</span>
+                        </div>
+                      </div>
+
+                      <div className="chore-card-actions">
+                        <button
+                          onClick={() => handleToggleActive(chore)}
+                          className={`btn-toggle ${chore.active ? "active" : "inactive"}`}
+                        >
+                          {chore.active ? "Active" : "Inactive"}
+                        </button>
+                        <button
+                          onClick={() => handleMarkDone(chore)}
+                          disabled={!activeUser || !chore.active}
+                          className="btn-done"
+                        >
+                          ✓ Done
+                        </button>
+                        <button
+                          onClick={() => handleSkipToday(chore)}
+                          disabled={!chore.active}
+                          className={`btn-skip ${chore.skipToday ? "skipped" : ""}`}
+                        >
+                          {chore.skipToday ? "Skipped" : "Skip"}
+                        </button>
+                        <button
+                          onClick={() => onDeleteChore(chore.id)}
+                          className="btn-delete"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Toolbar for form view */}
+          <div className="chores-toolbar">
+            <button
+              onClick={() => setChoreView("dashboard")}
+              className="toolbar-icon-btn"
+            >
+              <span className="btn-icon">📊</span>
+              <span className="btn-label">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setChoreView("form")}
+              className="toolbar-icon-btn active"
+            >
+              <span className="btn-icon">➕</span>
+              <span className="btn-label">Add Task</span>
+            </button>
+          </div>
+
+          {/* Add Task Form */}
+          <div className="chore-form">
+            <div className="form-header">
+              <h3>Add New Task</h3>
+            </div>
+
+            <div className="form-grid">
+              {/* Row 1: Task Name, Room, Category, Priority */}
+              <div className="form-field col-3">
+                <label className="form-label">Task Name</label>
+                <input
+                  type="text"
+                  value={taskName}
+                  onChange={(e) => setTaskName(e.target.value)}
+                  className="form-input"
+                  placeholder="e.g., Clean kitchen"
+                />
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">Room</label>
+                <select
+                  value={room}
+                  onChange={(e) => setRoom(e.target.value)}
+                  className="form-input"
+                >
+                  {ROOMS.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">Category</label>
+                <select
+                  value={choreCategory}
+                  onChange={(e) => {
+                    const cat = e.target
+                      .value as ChoreDefinition["choreCategory"];
+                    setChoreCategory(cat);
+                    const freq =
+                      CATEGORIES.find((c) => c.label === cat)?.days || 1;
+                    setFrequency(freq);
+                  }}
+                  className="form-input"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.label} value={c.label}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-field">
+                <label className="form-label">Priority</label>
+                <select
+                  value={priority}
+                  onChange={(e) =>
+                    setPriority(e.target.value as ChoreDefinition["priority"])
+                  }
+                  className="form-input"
+                >
+                  {PRIORITIES.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button onClick={handleAddTask} className="form-submit chore">
+              Add Task
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

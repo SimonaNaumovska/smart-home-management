@@ -195,7 +195,7 @@ export function ReceiptScanner({ onAddItems }: ReceiptScannerProps) {
   };
 
   return (
-    <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "900px", margin: "0 auto", width: "100%" }}>
       <h2 style={{ marginBottom: "20px", color: "#333" }}>
         📸 Receipt Scanner
       </h2>
