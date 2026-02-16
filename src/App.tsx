@@ -25,8 +25,6 @@ import { ShoppingList } from "./components/ShoppingList";
 import { Login } from "./components/Login";
 import { supabase } from "./supabase/config";
 
-// Temporary fallback: localStorage backup while Supabase syncs
-const useFallbackStorage = true;
 import {
   syncProducts,
   syncUsers,
@@ -137,70 +135,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   }, []);
 
   // ====================================
-  // TEMPORARY FALLBACK: localStorage backup
-  // While Supabase schema is being set up
-  // Remove this block once Supabase is fully operational
-  // ====================================
-  useEffect(() => {
-    if (!useFallbackStorage) return;
-    try {
-      const savedProducts = localStorage.getItem("products");
-      const savedUsers = localStorage.getItem("users");
-      const savedChores = localStorage.getItem("chores");
-      const savedLogs = localStorage.getItem("consumptionLogs");
-      const savedActiveUser = localStorage.getItem("activeUser");
-      const savedRooms = localStorage.getItem("rooms");
-      const savedCategories = localStorage.getItem("choreCategories");
-
-      if (savedProducts) setProducts(JSON.parse(savedProducts));
-      if (savedUsers) {
-        const parsedUsers = JSON.parse(savedUsers);
-        setUsers(parsedUsers);
-        if (savedActiveUser) {
-          const active = parsedUsers.find(
-            (u: User) => u.id === savedActiveUser,
-          );
-          if (active) setActiveUser(active);
-        }
-      }
-      if (savedChores) setChores(JSON.parse(savedChores));
-      if (savedLogs) setConsumptionLogs(JSON.parse(savedLogs));
-      if (savedRooms) setRooms(JSON.parse(savedRooms));
-      if (savedCategories) setChoreCategories(JSON.parse(savedCategories));
-
-      console.log("✅ Data loaded from localStorage fallback");
-    } catch (error) {
-      console.error("Error loading fallback data:", error);
-    }
-  }, []);
-
-  // Backup data to localStorage while Supabase connects
-  useEffect(() => {
-    if (!useFallbackStorage) return;
-    try {
-      localStorage.setItem("products", JSON.stringify(products));
-      localStorage.setItem("users", JSON.stringify(users));
-      localStorage.setItem("chores", JSON.stringify(chores));
-      localStorage.setItem("consumptionLogs", JSON.stringify(consumptionLogs));
-      localStorage.setItem("rooms", JSON.stringify(rooms));
-      localStorage.setItem("choreCategories", JSON.stringify(choreCategories));
-      if (activeUser) {
-        localStorage.setItem("activeUser", activeUser.id);
-      }
-    } catch (error) {
-      console.error("Error backing up to localStorage:", error);
-    }
-  }, [
-    products,
-    users,
-    chores,
-    consumptionLogs,
-    rooms,
-    choreCategories,
-    activeUser,
-  ]);
-
-  // Supabase real-time sync (always enabled, Firebase flag ignored)
+  // Supabase Real-Time Sync (Production)
   useEffect(() => {
     if (!householdId) return;
 
