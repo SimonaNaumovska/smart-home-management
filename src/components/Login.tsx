@@ -249,19 +249,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             {isSignUp ? "Sign In" : "Sign Up"}
           </button>
         </p>
-
-        <p
-          style={{
-            textAlign: "center",
-            color: "#999",
-            fontSize: "12px",
-            marginTop: "20px",
-            borderTop: "1px solid #eee",
-            paddingTop: "15px",
-          }}
-        >
-          Demo: Use any email with password "password123"
-        </p>
       </div>
     </div>
   );
