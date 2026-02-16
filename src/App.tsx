@@ -23,13 +23,19 @@ interface AppProps {
   householdId?: string;
 }
 
-function App({ householdId = "default-household" }: AppProps = {}) {
+function App({ householdId }: AppProps = {}) {
   const [activeTab, setActiveTab] = useState<string>("inventory");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Use custom hooks
-  const { isAuthenticated, currentUserEmail, authChecking, signOut } =
-    useAuth();
+  const {
+    isAuthenticated,
+    currentUserId,
+    currentUserEmail,
+    authChecking,
+    signOut,
+  } = useAuth();
+  const resolvedHouseholdId = householdId ?? currentUserId ?? "";
   const {
     products,
     addProduct,
@@ -38,8 +44,9 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     toggleToBuy,
     markPurchased,
     handleBulkAddItems,
-  } = useProducts(householdId);
-  const { users, activeUser, addUser, selectUser } = useUsers(householdId);
+  } = useProducts(resolvedHouseholdId);
+  const { users, activeUser, addUser, selectUser } =
+    useUsers(resolvedHouseholdId);
   const {
     chores,
     rooms,
@@ -51,8 +58,9 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     deleteRoom,
     addCategory,
     deleteCategory,
-  } = useChores(householdId);
-  const { consumptionLogs, logConsumption } = useConsumption(householdId);
+  } = useChores(resolvedHouseholdId);
+  const { consumptionLogs, logConsumption } =
+    useConsumption(resolvedHouseholdId);
 
   // ====================================
   // Event Handlers

@@ -3,6 +3,7 @@ import { supabase } from "../supabase/config";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState("");
   const [currentUserEmail, setCurrentUserEmail] = useState("");
   const [authChecking, setAuthChecking] = useState(true);
 
@@ -12,6 +13,7 @@ export const useAuth = () => {
         const { data } = await supabase.auth.getSession();
         if (data?.session?.user) {
           setIsAuthenticated(true);
+          setCurrentUserId(data.session.user.id);
           setCurrentUserEmail(data.session.user.email || "");
         }
       } catch (error) {
@@ -28,9 +30,11 @@ export const useAuth = () => {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         setIsAuthenticated(true);
+        setCurrentUserId(session.user.id);
         setCurrentUserEmail(session.user.email || "");
       } else {
         setIsAuthenticated(false);
+        setCurrentUserId("");
         setCurrentUserEmail("");
       }
     });
@@ -43,11 +47,13 @@ export const useAuth = () => {
   const signOut = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
+    setCurrentUserId("");
     setCurrentUserEmail("");
   };
 
   return {
     isAuthenticated,
+    currentUserId,
     currentUserEmail,
     authChecking,
     signOut,
