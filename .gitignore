@@ -123,3 +123,4 @@ ehthumbs_vista.db
 # IDE
 .vscode/
 .idea/
+.vercel/
