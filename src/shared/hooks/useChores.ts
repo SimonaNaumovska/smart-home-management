@@ -5,6 +5,12 @@ import {
   addChore as addChoreDB,
   updateChore as updateChoreDB,
   deleteChore as deleteChoreDB,
+  syncRooms,
+  addRoom as addRoomDB,
+  deleteRoom as deleteRoomDB,
+  syncChoreCategories,
+  addChoreCategory as addChoreCategoryDB,
+  deleteChoreCategory as deleteChoreCategoryDB,
 } from "../../supabase/database";
 
 export const useChores = (householdId: string) => {
@@ -15,12 +21,25 @@ export const useChores = (householdId: string) => {
   useEffect(() => {
     if (!householdId) return;
 
-    const unsubscribe = syncChores(householdId, (syncedChores) => {
+    const unsubscribeChores = syncChores(householdId, (syncedChores) => {
       setChores(syncedChores);
     });
 
+    const unsubscribeRooms = syncRooms(householdId, (syncedRooms) => {
+      setRooms(syncedRooms);
+    });
+
+    const unsubscribeCategories = syncChoreCategories(
+      householdId,
+      (syncedCategories) => {
+        setChoreCategories(syncedCategories);
+      },
+    );
+
     return () => {
-      unsubscribe();
+      unsubscribeChores();
+      unsubscribeRooms();
+      unsubscribeCategories();
     };
   }, [householdId]);
 
@@ -41,28 +60,32 @@ export const useChores = (householdId: string) => {
     }
   };
 
-  const addRoom = (room: Omit<Room, "id">) => {
+  const addRoom = async (room: Omit<Room, "id">) => {
     const newRoom: Room = {
       ...room,
       id: crypto.randomUUID(),
     };
-    setRooms((prev) => [...prev, newRoom]);
+    await addRoomDB(householdId, newRoom);
   };
 
-  const deleteRoom = (roomId: string) => {
-    setRooms((prev) => prev.filter((r) => r.id !== roomId));
+  const deleteRoom = async (roomId: string) => {
+    if (confirm("Are you sure you want to delete this room?")) {
+      await deleteRoomDB(householdId, roomId);
+    }
   };
 
-  const addCategory = (category: Omit<ChoreCategory, "id">) => {
+  const addCategory = async (category: Omit<ChoreCategory, "id">) => {
     const newCategory: ChoreCategory = {
       ...category,
       id: crypto.randomUUID(),
     };
-    setChoreCategories((prev) => [...prev, newCategory]);
+    await addChoreCategoryDB(householdId, newCategory);
   };
 
-  const deleteCategory = (categoryId: string) => {
-    setChoreCategories((prev) => prev.filter((c) => c.id !== categoryId));
+  const deleteCategory = async (categoryId: string) => {
+    if (confirm("Are you sure you want to delete this frequency?")) {
+      await deleteChoreCategoryDB(householdId, categoryId);
+    }
   };
 
   return {

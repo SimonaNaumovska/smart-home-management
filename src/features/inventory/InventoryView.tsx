@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Product, User } from "../../types/Product";
+import type { Product, User, Room } from "../../types/Product";
 import { FoodForm } from "./FoodForm";
 import { CleaningForm } from "./CleaningForm";
 import { ProductList } from "./ProductList";
@@ -10,6 +10,7 @@ import { MobileInventoryView } from "./MobileInventoryView";
 interface InventoryViewProps {
   products: Product[];
   activeUser: User | null;
+  rooms: Room[];
   onAddProduct: (product: Product) => void;
   onUpdateProduct: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
@@ -19,6 +20,7 @@ interface InventoryViewProps {
 export const InventoryView = ({
   products,
   activeUser,
+  rooms,
   onAddProduct,
   onUpdateProduct,
   onDeleteProduct,
@@ -369,6 +371,7 @@ export const InventoryView = ({
                   storage={foodStorage}
                   frequentlyUsed={foodFrequentlyUsed}
                   toBuy={foodToBuy}
+                  rooms={rooms}
                   onNameChange={setFoodName}
                   onQuantityChange={setFoodQuantity}
                   onUnitChange={setFoodUnit}
@@ -390,6 +393,7 @@ export const InventoryView = ({
                   storage={cleaningStorage}
                   frequentlyUsed={cleaningFrequentlyUsed}
                   toBuy={cleaningToBuy}
+                  rooms={rooms}
                   onNameChange={setCleaningName}
                   onQuantityChange={setCleaningQuantity}
                   onUnitChange={setCleaningUnit}

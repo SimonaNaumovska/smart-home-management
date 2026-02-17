@@ -1,3 +1,5 @@
+import type { Room } from "../../types/Product";
+
 interface CleaningFormProps {
   name: string;
   quantity: string;
@@ -7,6 +9,7 @@ interface CleaningFormProps {
   storage: string;
   frequentlyUsed: boolean;
   toBuy: boolean;
+  rooms: Room[];
   onNameChange: (value: string) => void;
   onQuantityChange: (value: string) => void;
   onUnitChange: (value: string) => void;
@@ -53,6 +56,7 @@ export function CleaningForm({
   storage,
   frequentlyUsed,
   toBuy,
+  rooms,
   onNameChange,
   onQuantityChange,
   onUnitChange,
@@ -63,6 +67,11 @@ export function CleaningForm({
   onToBuyChange,
   onAddProduct,
 }: CleaningFormProps) {
+  // Use rooms if available, otherwise use default cleaning storage locations
+  const storageLocations =
+    rooms.length > 0
+      ? rooms.sort((a, b) => a.order - b.order).map((r) => r.name)
+      : CLEANING_STORAGE_LOCATIONS;
   return (
     <div className="compact-form cleaning-form">
       <div className="form-header">
@@ -129,7 +138,7 @@ export function CleaningForm({
             className="form-input"
           >
             <option value="">Select location</option>
-            {CLEANING_STORAGE_LOCATIONS.map((loc) => (
+            {storageLocations.map((loc) => (
               <option key={loc} value={loc}>
                 {loc}
               </option>
