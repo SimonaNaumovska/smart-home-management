@@ -30,6 +30,7 @@ export interface ChoreCategory {
   id: string;
   name: string;
   icon: string; // emoji
+  frequencyDays: number; // 1 for Daily, 7 for Weekly, etc.
   order: number;
 }
 

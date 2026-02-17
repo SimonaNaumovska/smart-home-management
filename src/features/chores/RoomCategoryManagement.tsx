@@ -5,8 +5,8 @@ interface RoomCategoryManagementProps {
   rooms: Room[];
   categories: ChoreCategory[];
   onAddRoom: (room: Omit<Room, "id">) => void;
-  onAddCategory: (category: Omit<ChoreCategory, "id">) => void;
   onDeleteRoom: (roomId: string) => void;
+  onAddCategory: (category: Omit<ChoreCategory, "id">) => void;
   onDeleteCategory: (categoryId: string) => void;
 }
 
@@ -14,18 +14,33 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
   rooms,
   categories,
   onAddRoom,
-  onAddCategory,
   onDeleteRoom,
+  onAddCategory,
   onDeleteCategory,
 }) => {
   const [newRoomName, setNewRoomName] = useState("");
   const [newRoomIcon, setNewRoomIcon] = useState("🛏️");
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryIcon, setNewCategoryIcon] = useState("📋");
-  const [activeTab, setActiveTab] = useState<"rooms" | "categories">("rooms");
+  const [newCategoryFrequency, setNewCategoryFrequency] = useState(7);
+  const [activeTab, setActiveTab] = useState<"rooms" | "frequencies">("rooms");
 
   const roomEmojis = ["🛏️", "🚿", "🍳", "🛋️", "🧹", "🌳", "🚪", "📚", "🏠"];
-  const categoryEmojis = ["📋", "🧹", "🧼", "🧳", "🍳", "🧵", "💧", "🌿", "⚙️"];
+  const categoryEmojis = [
+    "📋",
+    "🧹",
+    "🧼",
+    "🧳",
+    "🍳",
+    "🧵",
+    "💧",
+    "🌿",
+    "⚙️",
+    "❄️",
+    "🌸",
+    "🍂",
+    "☀️",
+  ];
 
   const handleAddRoom = () => {
     if (!newRoomName.trim()) return;
@@ -40,19 +55,36 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
 
   const handleAddCategory = () => {
     if (!newCategoryName.trim()) return;
+    if (newCategoryFrequency < 1) {
+      alert("Frequency must be at least 1 day");
+      return;
+    }
     onAddCategory({
       name: newCategoryName,
       icon: newCategoryIcon,
+      frequencyDays: newCategoryFrequency,
       order: categories.length,
     });
     setNewCategoryName("");
     setNewCategoryIcon("📋");
+    setNewCategoryFrequency(7);
+  };
+
+  // Helper function to format frequency days into a human-readable string
+  const formatFrequency = (days: number): string => {
+    if (days === 1) return "Every day";
+    if (days === 7) return "Every week";
+    if (days === 14) return "Every 2 weeks";
+    if (days === 30) return "Every month";
+    if (days === 90) return "Every 3 months";
+    if (days === 180) return "Every 6 months";
+    return `Every ${days} days`;
   };
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px" }}>
       <h2 style={{ marginBottom: "20px", color: "#333" }}>
-        🏠 Rooms & Categories
+        🏠 Rooms & Frequencies
       </h2>
 
       {/* Tabs */}
@@ -72,18 +104,19 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
           🏠 Rooms
         </button>
         <button
-          onClick={() => setActiveTab("categories")}
+          onClick={() => setActiveTab("frequencies")}
           style={{
             padding: "10px 20px",
-            backgroundColor: activeTab === "categories" ? "#2196F3" : "#f5f5f5",
-            color: activeTab === "categories" ? "white" : "#333",
+            backgroundColor:
+              activeTab === "frequencies" ? "#2196F3" : "#f5f5f5",
+            color: activeTab === "frequencies" ? "white" : "#333",
             border: "none",
             borderRadius: "6px",
             cursor: "pointer",
             fontWeight: "bold",
           }}
         >
-          📋 Categories
+          📋 Frequencies
         </button>
       </div>
 
@@ -195,51 +228,109 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
         </div>
       )}
 
-      {/* Categories Tab */}
-      {activeTab === "categories" && (
+      {/* Frequencies Tab */}
+      {activeTab === "frequencies" && (
         <div>
           <h3 style={{ marginBottom: "15px", color: "#2196F3" }}>
-            Add Chore Category
+            Add Chore Frequency
           </h3>
+          <p style={{ marginBottom: "20px", color: "#666", fontSize: "14px" }}>
+            Create custom frequencies for your chores (e.g., Daily, Weekly,
+            Seasonal, Winter Cleaning, etc.)
+          </p>
+
+          {/* Add Category Form */}
           <div
             style={{
               display: "flex",
               gap: "10px",
               marginBottom: "20px",
               flexWrap: "wrap",
+              alignItems: "flex-end",
             }}
           >
-            <input
-              type="text"
-              placeholder="Category name (e.g., Cleaning)"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              style={{
-                flex: 1,
-                minWidth: "200px",
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                fontSize: "14px",
-              }}
-            />
-            <select
-              value={newCategoryIcon}
-              onChange={(e) => setNewCategoryIcon(e.target.value)}
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                fontSize: "18px",
-                minWidth: "60px",
-              }}
-            >
-              {categoryEmojis.map((emoji) => (
-                <option key={emoji} value={emoji}>
-                  {emoji}
-                </option>
-              ))}
-            </select>
+            <div style={{ flex: "1", minWidth: "150px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
+                Frequency Name
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Winter Cleaning"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+            <div style={{ minWidth: "120px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
+                Frequency (days)
+              </label>
+              <input
+                type="number"
+                min="1"
+                placeholder="Days"
+                value={newCategoryFrequency}
+                onChange={(e) =>
+                  setNewCategoryFrequency(parseInt(e.target.value) || 1)
+                }
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                }}
+              />
+            </div>
+            <div style={{ minWidth: "60px" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontSize: "12px",
+                  color: "#666",
+                }}
+              >
+                Icon
+              </label>
+              <select
+                value={newCategoryIcon}
+                onChange={(e) => setNewCategoryIcon(e.target.value)}
+                style={{
+                  padding: "10px",
+                  border: "1px solid #ddd",
+                  borderRadius: "6px",
+                  fontSize: "18px",
+                  width: "100%",
+                }}
+              >
+                {categoryEmojis.map((emoji) => (
+                  <option key={emoji} value={emoji}>
+                    {emoji}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={handleAddCategory}
               style={{
@@ -250,17 +341,18 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
                 borderRadius: "6px",
                 cursor: "pointer",
                 fontWeight: "bold",
+                minWidth: "120px",
               }}
             >
-              ➕ Add Category
+              ➕ Add Frequency
             </button>
           </div>
 
-          {/* Categories List */}
+          {/* Frequencies List */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
               gap: "15px",
             }}
           >
@@ -281,9 +373,14 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
                   style={{ display: "flex", alignItems: "center", gap: "10px" }}
                 >
                   <span style={{ fontSize: "24px" }}>{category.icon}</span>
-                  <span style={{ fontWeight: "bold", color: "#333" }}>
-                    {category.name}
-                  </span>
+                  <div>
+                    <div style={{ fontWeight: "bold", color: "#333" }}>
+                      {category.name}
+                    </div>
+                    <div style={{ fontSize: "12px", color: "#666" }}>
+                      {formatFrequency(category.frequencyDays)}
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={() => onDeleteCategory(category.id)}
@@ -320,7 +417,7 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
         </div>
       )}
 
-      {activeTab === "categories" && categories.length === 0 && (
+      {activeTab === "frequencies" && categories.length === 0 && (
         <div
           style={{
             padding: "40px 20px",
@@ -330,7 +427,7 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
             color: "#999",
           }}
         >
-          <p>No categories yet. Add your first category above! 📋</p>
+          <p>No frequencies yet. Add your first frequency above! 📋</p>
         </div>
       )}
     </div>

@@ -15,7 +15,7 @@ import { Sidebar, Layout } from "../shared/components/Layout";
 import { useAuth } from "../shared/hooks/useAuth";
 import { useHousehold } from "../shared/hooks/useHousehold";
 import { useProducts } from "../shared/hooks/useProducts";
-import { useUsers } from "../shared/hooks/useUsers";
+import { useCurrentUser } from "../shared/hooks/useCurrentUser";
 import { useChores } from "../shared/hooks/useChores";
 import { useConsumption } from "../shared/hooks/useConsumption";
 import "../App.css";
@@ -55,7 +55,10 @@ function App() {
     markPurchased,
     handleBulkAddItems,
   } = useProducts(householdId);
-  const { users, activeUser, addUser, selectUser } = useUsers(householdId);
+
+  // Get current user from household members
+  const currentUser = useCurrentUser(currentUserId, householdMembers);
+
   const {
     chores,
     rooms,
@@ -75,7 +78,7 @@ function App() {
   // ====================================
 
   const handleLogConsumption = async (productId: string, amount: number) => {
-    if (!activeUser) return;
+    if (!currentUser) return;
 
     const product = products.find((p) => p.id === productId);
     if (!product) return;
@@ -89,8 +92,8 @@ function App() {
     // Log consumption
     const newLog: ConsumptionLog = {
       id: crypto.randomUUID(),
-      userId: activeUser.id,
-      userName: activeUser.name,
+      userId: currentUser.id,
+      userName: currentUser.name,
       productId: product.id,
       productName: product.name,
       amount,
@@ -126,7 +129,7 @@ function App() {
   };
 
   const handleCompleteChore = async (choreId: string) => {
-    if (!activeUser) return;
+    if (!currentUser) return;
 
     const chore = chores.find((c) => c.id === choreId);
     if (!chore) return;
@@ -150,8 +153,8 @@ function App() {
         // Log consumption
         const newLog: ConsumptionLog = {
           id: crypto.randomUUID(),
-          userId: activeUser.id,
-          userName: activeUser.name,
+          userId: currentUser.id,
+          userName: currentUser.name,
           productId: product.id,
           productName: product.name,
           amount: consumedProduct.defaultAmount,
@@ -211,7 +214,8 @@ function App() {
         {activeTab === "inventory" && (
           <InventoryView
             products={products}
-            activeUser={activeUser}
+            activeUser={currentUser}
+            rooms={rooms}
             onAddProduct={addProduct}
             onUpdateProduct={updateProduct}
             onDeleteProduct={deleteProduct}
@@ -230,7 +234,7 @@ function App() {
         {activeTab === "consumption" && (
           <ConsumptionLogger
             products={products}
-            activeUser={activeUser}
+            activeUser={currentUser}
             onLogConsumption={handleLogConsumption}
           />
         )}
@@ -239,7 +243,9 @@ function App() {
           <ChoresDashboard
             chores={chores}
             products={products}
-            activeUser={activeUser}
+            activeUser={currentUser}
+            rooms={rooms}
+            choreCategories={choreCategories}
             onAddChore={addChore}
             onUpdateChore={updateChore}
             onCompleteChore={handleCompleteChore}
@@ -250,7 +256,12 @@ function App() {
         {activeTab === "analytics" && (
           <AnalyticsDashboard
             consumptionLogs={consumptionLogs}
-            users={users}
+            users={householdMembers.map((m) => ({
+              id: m.userId,
+              name: m.displayName || "Unknown",
+              avatar: m.avatar,
+              color: m.color,
+            }))}
             products={products}
           />
         )}
@@ -266,10 +277,9 @@ function App() {
 
         {activeTab === "members" && (
           <UserManagement
-            users={users}
-            activeUser={activeUser}
-            onSelectUser={selectUser}
-            onAddUser={addUser}
+            currentUser={currentUser}
+            householdMembers={householdMembers}
+            currentUserId={currentUserId}
           />
         )}
 
@@ -285,14 +295,42 @@ function App() {
               />
             )}
 
-            <RoomCategoryManagement
-              rooms={rooms}
-              categories={choreCategories}
-              onAddRoom={addRoom}
-              onAddCategory={addCategory}
-              onDeleteRoom={deleteRoom}
-              onDeleteCategory={deleteCategory}
-            />
+            {/* Only show room/category management to household owners */}
+            {currentUserId &&
+              householdMembers.find(
+                (m) => m.userId === currentUserId && m.role === "owner",
+              ) && (
+                <RoomCategoryManagement
+                  rooms={rooms}
+                  categories={choreCategories}
+                  onAddRoom={addRoom}
+                  onDeleteRoom={deleteRoom}
+                  onAddCategory={addCategory}
+                  onDeleteCategory={deleteCategory}
+                />
+              )}
+
+            {/* Show message if not owner */}
+            {currentUserId &&
+              !householdMembers.find(
+                (m) => m.userId === currentUserId && m.role === "owner",
+              ) && (
+                <div
+                  style={{
+                    padding: "20px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    backgroundColor: "#f9f9f9",
+                    marginTop: "20px",
+                  }}
+                >
+                  <p style={{ color: "#666", margin: 0 }}>
+                    💡 <strong>Note:</strong> Only household owners can manage
+                    rooms and categories. Contact your household owner if you
+                    need changes.
+                  </p>
+                </div>
+              )}
           </div>
         )}
       </Layout>

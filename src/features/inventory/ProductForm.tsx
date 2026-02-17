@@ -1,3 +1,5 @@
+import type { Room } from "../../types/Product";
+
 interface ProductFormProps {
   name: string;
   category: string;
@@ -9,6 +11,7 @@ interface ProductFormProps {
   storage: string;
   toBuy: boolean;
   frequentlyUsed: boolean;
+  rooms: Room[];
   onNameChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onQuantityChange: (value: string) => void;
@@ -34,7 +37,8 @@ const CATEGORIES = [
   "Other",
 ];
 
-const STORAGE_LOCATIONS = [
+// Fallback storage locations if no rooms are defined
+const DEFAULT_STORAGE_LOCATIONS = [
   "Kitchen Pantry",
   "Refrigerator",
   "Freezer",
@@ -58,6 +62,7 @@ export function ProductForm({
   storage,
   toBuy,
   frequentlyUsed,
+  rooms,
   onNameChange,
   onCategoryChange,
   onQuantityChange,
@@ -70,6 +75,11 @@ export function ProductForm({
   onFrequentlyUsedChange,
   onAddProduct,
 }: ProductFormProps) {
+  // Use rooms if available, otherwise use default locations
+  const storageLocations =
+    rooms.length > 0
+      ? rooms.sort((a, b) => a.order - b.order).map((r) => r.name)
+      : DEFAULT_STORAGE_LOCATIONS;
   return (
     <>
       <h2>Add Product</h2>
@@ -137,7 +147,7 @@ export function ProductForm({
           }}
         >
           <option value="">Select Storage Location</option>
-          {STORAGE_LOCATIONS.map((loc) => (
+          {storageLocations.map((loc) => (
             <option key={loc} value={loc}>
               {loc}
             </option>

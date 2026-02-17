@@ -1,42 +1,17 @@
 import type { User } from "../../types/Product";
+import type { HouseholdMember } from "../../shared/hooks/useHousehold";
 
 interface UserManagementProps {
-  users: User[];
-  activeUser: User | null;
-  onSelectUser: (user: User) => void;
-  onAddUser: (name: string, avatar: string, color: string) => void;
+  currentUser: User | null;
+  householdMembers: HouseholdMember[];
+  currentUserId: string | null;
 }
 
-const AVATARS = ["👤", "👨", "👩", "🧑", "👦", "👧", "🧔", "👨‍🦱", "👩‍🦰", "👨‍🦲"];
-const COLORS = [
-  "#4CAF50",
-  "#2196F3",
-  "#FF9800",
-  "#E91E63",
-  "#9C27B0",
-  "#00BCD4",
-];
-
 export function UserManagement({
-  users,
-  activeUser,
-  onSelectUser,
-  onAddUser,
+  currentUser,
+  householdMembers,
+  currentUserId,
 }: UserManagementProps) {
-  const [showAddUser, setShowAddUser] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [selectedAvatar, setSelectedAvatar] = useState(AVATARS[0]);
-  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
-
-  const handleAddUser = () => {
-    if (!newName.trim()) return;
-    onAddUser(newName.trim(), selectedAvatar, selectedColor);
-    setNewName("");
-    setSelectedAvatar(AVATARS[0]);
-    setSelectedColor(COLORS[0]);
-    setShowAddUser(false);
-  };
-
   return (
     <div
       style={{
@@ -48,14 +23,18 @@ export function UserManagement({
       }}
     >
       <h2>👥 Household Members</h2>
+      <p style={{ color: "#666", marginBottom: "20px" }}>
+        These are all members of your household. You are currently logged in as{" "}
+        <strong>{currentUser?.name}</strong>.
+      </p>
 
-      {/* Active User Display */}
-      {activeUser && (
+      {/* Current User Display */}
+      {currentUser && (
         <div
           style={{
             padding: "12px",
-            backgroundColor: activeUser.color + "20",
-            border: `2px solid ${activeUser.color}`,
+            backgroundColor: currentUser.color + "20",
+            border: `2px solid ${currentUser.color}`,
             borderRadius: "8px",
             marginBottom: "16px",
             display: "flex",
@@ -63,197 +42,86 @@ export function UserManagement({
             gap: "12px",
           }}
         >
-          <span style={{ fontSize: "32px" }}>{activeUser.avatar}</span>
+          <span style={{ fontSize: "32px" }}>{currentUser.avatar}</span>
           <div>
             <div style={{ fontWeight: "bold", fontSize: "18px" }}>
-              Active User: {activeUser.name}
+              You: {currentUser.name}
             </div>
             <div style={{ fontSize: "14px", color: "#666" }}>
-              All actions will be logged under this user
+              All actions are logged under your account
             </div>
           </div>
         </div>
       )}
 
-      {/* User Selection */}
+      {/* All Household Members */}
       <div
         style={{
           display: "flex",
-          flexWrap: "wrap",
+          flexDirection: "column",
           gap: "12px",
-          marginBottom: "16px",
         }}
       >
-        {users.map((user) => (
-          <button
-            key={user.id}
-            onClick={() => onSelectUser(user)}
+        <h3 style={{ marginBottom: "8px" }}>All Members:</h3>
+        {householdMembers.map((member) => (
+          <div
+            key={member.id}
             style={{
               padding: "12px 16px",
               border:
-                activeUser?.id === user.id
-                  ? `3px solid ${user.color}`
+                member.userId === currentUserId
+                  ? `3px solid ${member.color}`
                   : "2px solid #ddd",
               borderRadius: "8px",
               backgroundColor:
-                activeUser?.id === user.id ? user.color + "30" : "white",
-              cursor: "pointer",
+                member.userId === currentUserId ? member.color + "30" : "white",
               display: "flex",
               alignItems: "center",
-              gap: "8px",
-              fontSize: "16px",
-              fontWeight: activeUser?.id === user.id ? "bold" : "normal",
+              gap: "12px",
             }}
           >
-            <span style={{ fontSize: "24px" }}>{user.avatar}</span>
-            <span>{user.name}</span>
-          </button>
+            <span style={{ fontSize: "24px" }}>{member.avatar}</span>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  fontWeight:
+                    member.userId === currentUserId ? "bold" : "normal",
+                }}
+              >
+                {member.displayName}
+                {member.userId === currentUserId && " (You)"}
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#666",
+                  textTransform: "capitalize",
+                }}
+              >
+                {member.role}
+              </div>
+            </div>
+            {member.userId === currentUserId && (
+              <span style={{ color: "#4CAF50", fontSize: "20px" }}>✓</span>
+            )}
+          </div>
         ))}
-
-        <button
-          onClick={() => setShowAddUser(!showAddUser)}
-          style={{
-            padding: "12px 16px",
-            border: "2px dashed #4CAF50",
-            borderRadius: "8px",
-            backgroundColor: "white",
-            cursor: "pointer",
-            fontSize: "16px",
-            color: "#4CAF50",
-            fontWeight: "bold",
-          }}
-        >
-          + Add Member
-        </button>
       </div>
 
-      {/* Add User Form */}
-      {showAddUser && (
-        <div
-          style={{
-            padding: "16px",
-            border: "2px solid #4CAF50",
-            borderRadius: "8px",
-            backgroundColor: "white",
-          }}
-        >
-          <h3>Add New Household Member</h3>
-
-          <input
-            type="text"
-            placeholder="Name (e.g., Daniel, Damjan)"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              width: "100%",
-              marginBottom: "12px",
-              fontSize: "16px",
-            }}
-          />
-
-          <div style={{ marginBottom: "12px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "bold",
-              }}
-            >
-              Choose Avatar:
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {AVATARS.map((avatar) => (
-                <button
-                  key={avatar}
-                  onClick={() => setSelectedAvatar(avatar)}
-                  style={{
-                    padding: "8px",
-                    fontSize: "24px",
-                    border:
-                      selectedAvatar === avatar
-                        ? "3px solid #4CAF50"
-                        : "2px solid #ddd",
-                    borderRadius: "8px",
-                    backgroundColor:
-                      selectedAvatar === avatar ? "#e8f5e9" : "white",
-                    cursor: "pointer",
-                  }}
-                >
-                  {avatar}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: "12px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "8px",
-                fontWeight: "bold",
-              }}
-            >
-              Choose Color:
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  style={{
-                    width: "40px",
-                    height: "40px",
-                    backgroundColor: color,
-                    border:
-                      selectedColor === color
-                        ? "4px solid #000"
-                        : "2px solid #ddd",
-                    borderRadius: "8px",
-                    cursor: "pointer",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: "8px" }}>
-            <button
-              onClick={handleAddUser}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#4CAF50",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "16px",
-                fontWeight: "bold",
-              }}
-            >
-              Add Member
-            </button>
-            <button
-              onClick={() => setShowAddUser(false)}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: "#666",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontSize: "16px",
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <div
+        style={{
+          marginTop: "20px",
+          padding: "12px",
+          backgroundColor: "#e3f2fd",
+          borderRadius: "8px",
+          fontSize: "14px",
+          color: "#1976d2",
+        }}
+      >
+        💡 <strong>Tip:</strong> To add new members, share your Household ID
+        (found in Settings) with them. They can join during signup or by
+        contacting support.
+      </div>
     </div>
   );
 }
-
-import { useState } from "react";

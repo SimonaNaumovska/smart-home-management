@@ -1,17 +1,26 @@
 import { useState, useEffect } from "react";
-import type { ChoreDefinition, User, Product } from "../../types/Product";
+import type {
+  ChoreDefinition,
+  User,
+  Product,
+  Room,
+  ChoreCategory,
+} from "../../types/Product";
 
 interface ChoresDashboardProps {
   chores: ChoreDefinition[];
   products: Product[];
   activeUser: User | null;
+  rooms: Room[];
+  choreCategories: ChoreCategory[];
   onAddChore: (chore: ChoreDefinition) => void;
   onUpdateChore: (chore: ChoreDefinition) => void;
   onCompleteChore: (choreId: string) => void;
   onDeleteChore: (choreId: string) => void;
 }
 
-const ROOMS = [
+// Fallback rooms if no rooms are defined
+const DEFAULT_ROOMS = [
   "Kitchen",
   "Bathroom",
   "Bedroom1",
@@ -38,16 +47,30 @@ const PRIORITIES = ["01 High", "02 Normal", "03 Low"];
 export function ChoresDashboard({
   chores,
   activeUser,
+  rooms,
+  choreCategories,
   onAddChore,
   onUpdateChore,
   onCompleteChore,
   onDeleteChore,
 }: ChoresDashboardProps) {
+  // Use dynamic rooms if available, otherwise use defaults
+  const availableRooms =
+    rooms.length > 0
+      ? rooms.sort((a, b) => a.order - b.order).map((r) => r.name)
+      : DEFAULT_ROOMS;
+
+  // Use dynamic categories if available, otherwise use defaults
+  const availableCategories =
+    choreCategories.length > 0
+      ? choreCategories.sort((a, b) => a.order - b.order).map((c) => c.name)
+      : CATEGORIES.map((c) => c.label);
   const [choreView, setChoreView] = useState<"dashboard" | "form">("dashboard");
   const [taskName, setTaskName] = useState("");
-  const [room, setRoom] = useState("Kitchen");
-  const [choreCategory, setChoreCategory] =
-    useState<ChoreDefinition["choreCategory"]>("Daily");
+  const [room, setRoom] = useState(availableRooms[0] || "Kitchen");
+  const [choreCategory, setChoreCategory] = useState<
+    ChoreDefinition["choreCategory"]
+  >(availableCategories[0] || "Daily");
   const [priority, setPriority] =
     useState<ChoreDefinition["priority"]>("02 Normal");
   const [frequency, setFrequency] = useState(1);
@@ -88,12 +111,12 @@ export function ChoresDashboard({
 
   const handleAddTask = () => {
     if (!taskName.trim()) {
-      alert("Please enter a task name");
+      alert("Please enter a chore name");
       return;
     }
 
     const newChore: ChoreDefinition = {
-      id: `TASK-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      id: `CHORE-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
       name: taskName,
       room,
       choreCategory,
@@ -181,7 +204,7 @@ export function ChoresDashboard({
 
       {!activeUser && (
         <div className="chores-warning">
-          ⚠️ Please select an active user to mark tasks as done
+          ⚠️ Please select an active user to mark chores as done
         </div>
       )}
 
@@ -235,7 +258,7 @@ export function ChoresDashboard({
               className="toolbar-icon-btn"
             >
               <span className="btn-icon">➕</span>
-              <span className="btn-label">Add Task</span>
+              <span className="btn-label">Add Chore</span>
             </button>
           </div>
 
@@ -245,9 +268,9 @@ export function ChoresDashboard({
               <table className="chores-table">
                 <thead>
                   <tr>
-                    <th>Task</th>
+                    <th>Chore</th>
                     <th>Room</th>
-                    <th>Category</th>
+                    <th>Frequency</th>
                     <th>Priority</th>
                     <th className="th-center">Active</th>
                     <th className="th-center">Done</th>
@@ -262,7 +285,7 @@ export function ChoresDashboard({
                   {sortedChores.length === 0 ? (
                     <tr>
                       <td colSpan={11} className="empty-state">
-                        No tasks yet. Click "Add Task" to get started!
+                        No chores yet. Click "Add Chore" to get started!
                       </td>
                     </tr>
                   ) : (
@@ -348,7 +371,7 @@ export function ChoresDashboard({
             <div className="chores-cards-mobile">
               {sortedChores.length === 0 ? (
                 <div className="empty-state-mobile">
-                  No tasks yet. Click "Add Task" to get started!
+                  No chores yet. Click "Add Chore" to get started!
                 </div>
               ) : (
                 sortedChores.map((chore) => {
@@ -373,7 +396,7 @@ export function ChoresDashboard({
                           <span>{chore.room}</span>
                         </div>
                         <div className="chore-info-item">
-                          <span className="info-label">Category:</span>
+                          <span className="info-label">Frequency:</span>
                           <span>{chore.choreCategory}</span>
                         </div>
                         <div className="chore-info-item">
@@ -451,20 +474,20 @@ export function ChoresDashboard({
               className="toolbar-icon-btn active"
             >
               <span className="btn-icon">➕</span>
-              <span className="btn-label">Add Task</span>
+              <span className="btn-label">Add Chore</span>
             </button>
           </div>
 
-          {/* Add Task Form */}
+          {/* Add Chore Form */}
           <div className="chore-form">
             <div className="form-header">
-              <h3>Add New Task</h3>
+              <h3>Add New Chore</h3>
             </div>
 
             <div className="form-grid">
-              {/* Row 1: Task Name, Room, Category, Priority */}
+              {/* Row 1: Chore Name, Room, Frequency, Priority */}
               <div className="form-field col-3">
-                <label className="form-label">Task Name</label>
+                <label className="form-label">Chore Name</label>
                 <input
                   type="text"
                   value={taskName}
@@ -481,7 +504,7 @@ export function ChoresDashboard({
                   onChange={(e) => setRoom(e.target.value)}
                   className="form-input"
                 >
-                  {ROOMS.map((r) => (
+                  {availableRooms.map((r) => (
                     <option key={r} value={r}>
                       {r}
                     </option>
@@ -490,22 +513,27 @@ export function ChoresDashboard({
               </div>
 
               <div className="form-field">
-                <label className="form-label">Category</label>
+                <label className="form-label">Frequency</label>
                 <select
                   value={choreCategory}
                   onChange={(e) => {
                     const cat = e.target
                       .value as ChoreDefinition["choreCategory"];
                     setChoreCategory(cat);
-                    const freq =
-                      CATEGORIES.find((c) => c.label === cat)?.days || 1;
+                    // Find frequency from choreCategories, fallback to CATEGORIES constant
+                    const categoryData = choreCategories.find(
+                      (c) => c.name === cat,
+                    );
+                    const freq = categoryData
+                      ? categoryData.frequencyDays
+                      : CATEGORIES.find((c) => c.label === cat)?.days || 1;
                     setFrequency(freq);
                   }}
                   className="form-input"
                 >
-                  {CATEGORIES.map((c) => (
-                    <option key={c.label} value={c.label}>
-                      {c.label}
+                  {availableCategories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
                     </option>
                   ))}
                 </select>

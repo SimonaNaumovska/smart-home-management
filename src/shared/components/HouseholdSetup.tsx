@@ -3,10 +3,30 @@ import "./HouseholdSetup.css";
 
 interface HouseholdSetupProps {
   onHouseholdCreated: (householdId: string) => void;
-  onCreateHousehold: (name: string, displayName: string) => Promise<string>;
-  onJoinHousehold: (householdId: string, displayName: string) => Promise<void>;
+  onCreateHousehold: (
+    name: string,
+    displayName: string,
+    avatar: string,
+    color: string,
+  ) => Promise<string>;
+  onJoinHousehold: (
+    householdId: string,
+    displayName: string,
+    avatar: string,
+    color: string,
+  ) => Promise<void>;
   userEmail: string;
 }
+
+const AVATARS = ["👤", "👨", "👩", "🧑", "👦", "👧", "🧔", "👨‍🦱", "👩‍🦰", "👨‍🦲"];
+const COLORS = [
+  "#4CAF50",
+  "#2196F3",
+  "#FF9800",
+  "#E91E63",
+  "#9C27B0",
+  "#00BCD4",
+];
 
 export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
   onHouseholdCreated,
@@ -18,6 +38,8 @@ export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
   const [householdName, setHouseholdName] = useState("");
   const [householdId, setHouseholdId] = useState("");
   const [displayName, setDisplayName] = useState("");
+  const [avatar, setAvatar] = useState(AVATARS[0]);
+  const [color, setColor] = useState(COLORS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +57,8 @@ export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
       const newHouseholdId = await onCreateHousehold(
         householdName,
         displayName,
+        avatar,
+        color,
       );
       onHouseholdCreated(newHouseholdId);
     } catch (err: any) {
@@ -54,7 +78,7 @@ export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
     setError("");
 
     try {
-      await onJoinHousehold(householdId, displayName);
+      await onJoinHousehold(householdId, displayName, avatar, color);
       onHouseholdCreated(householdId);
     } catch (err: any) {
       setError(err.message || "Failed to join household");
@@ -139,6 +163,51 @@ export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
               />
             </div>
 
+            <div className="form-group">
+              <label>Choose Your Avatar</label>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {AVATARS.map((av) => (
+                  <button
+                    key={av}
+                    type="button"
+                    onClick={() => setAvatar(av)}
+                    style={{
+                      fontSize: "32px",
+                      padding: "8px",
+                      border:
+                        avatar === av ? "3px solid #4CAF50" : "2px solid #ddd",
+                      borderRadius: "8px",
+                      background: "white",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {av}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Choose Your Color</label>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setColor(c)}
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: c,
+                      border: color === c ? "4px solid #000" : "2px solid #ddd",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
             {error && <div className="error-message">{error}</div>}
 
             <button
@@ -192,6 +261,51 @@ export const HouseholdSetup: React.FC<HouseholdSetupProps> = ({
               disabled={loading}
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label>Choose Your Avatar</label>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {AVATARS.map((av) => (
+                <button
+                  key={av}
+                  type="button"
+                  onClick={() => setAvatar(av)}
+                  style={{
+                    fontSize: "32px",
+                    padding: "8px",
+                    border:
+                      avatar === av ? "3px solid #4CAF50" : "2px solid #ddd",
+                    borderRadius: "8px",
+                    background: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  {av}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Choose Your Color</label>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  style={{
+                    width: "40px",
+                    height: "40px",
+                    backgroundColor: c,
+                    border: color === c ? "4px solid #000" : "2px solid #ddd",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                  }}
+                />
+              ))}
+            </div>
           </div>
 
           {error && <div className="error-message">{error}</div>}

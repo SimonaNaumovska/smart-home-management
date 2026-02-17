@@ -535,12 +535,20 @@ export const syncRooms = (
     .from("rooms")
     .select("*")
     .eq("household_id", householdId)
+    .order("order", { ascending: true })
     .then(({ data, error }) => {
       if (error) {
         console.error("Error fetching rooms:", error);
         return;
       }
-      callback(data || []);
+      // Map database columns to TypeScript properties
+      const mapped = (data || []).map((room: any) => ({
+        id: room.id,
+        name: room.name,
+        icon: room.icon || "🏠",
+        order: room.order || 0,
+      }));
+      callback(mapped);
     });
 
   const subscription = supabase
@@ -558,9 +566,17 @@ export const syncRooms = (
           .from("rooms")
           .select("*")
           .eq("household_id", householdId)
+          .order("order", { ascending: true })
           .then(({ data, error }) => {
             if (!error && data) {
-              callback(data);
+              // Map database columns to TypeScript properties
+              const mapped = data.map((room: any) => ({
+                id: room.id,
+                name: room.name,
+                icon: room.icon || "🏠",
+                order: room.order || 0,
+              }));
+              callback(mapped);
             }
           });
       },
@@ -576,7 +592,10 @@ export const addRoom = async (householdId: string, room: Room) => {
   try {
     const { error } = await supabase.from("rooms").insert([
       {
-        ...room,
+        id: room.id,
+        name: room.name,
+        icon: room.icon,
+        order: room.order,
         household_id: householdId,
       },
     ]);
@@ -617,12 +636,21 @@ export const syncChoreCategories = (
     .from("chore_categories")
     .select("*")
     .eq("household_id", householdId)
+    .order("order", { ascending: true })
     .then(({ data, error }) => {
       if (error) {
         console.error("Error fetching chore categories:", error);
         return;
       }
-      callback(data || []);
+      // Map database columns to TypeScript properties
+      const mapped = (data || []).map((cat: any) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        frequencyDays: cat.frequency_days || 1,
+        order: cat.order,
+      }));
+      callback(mapped);
     });
 
   const subscription = supabase
@@ -640,9 +668,18 @@ export const syncChoreCategories = (
           .from("chore_categories")
           .select("*")
           .eq("household_id", householdId)
+          .order("order", { ascending: true })
           .then(({ data, error }) => {
             if (!error && data) {
-              callback(data);
+              // Map database columns to TypeScript properties
+              const mapped = data.map((cat: any) => ({
+                id: cat.id,
+                name: cat.name,
+                icon: cat.icon,
+                frequencyDays: cat.frequency_days || 1,
+                order: cat.order,
+              }));
+              callback(mapped);
             }
           });
       },
@@ -661,7 +698,11 @@ export const addChoreCategory = async (
   try {
     const { error } = await supabase.from("chore_categories").insert([
       {
-        ...category,
+        id: category.id,
+        name: category.name,
+        icon: category.icon,
+        frequency_days: category.frequencyDays,
+        order: category.order,
         household_id: householdId,
       },
     ]);

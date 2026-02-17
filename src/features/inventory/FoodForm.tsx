@@ -1,3 +1,5 @@
+import type { Room } from "../../types/Product";
+
 interface FoodFormProps {
   name: string;
   quantity: string;
@@ -8,6 +10,7 @@ interface FoodFormProps {
   storage: string;
   frequentlyUsed: boolean;
   toBuy: boolean;
+  rooms: Room[];
   onNameChange: (value: string) => void;
   onQuantityChange: (value: string) => void;
   onUnitChange: (value: string) => void;
@@ -20,7 +23,7 @@ interface FoodFormProps {
   onAddProduct: () => void;
 }
 
-const FOOD_STORAGE_LOCATIONS = [
+const DEFAULT_FOOD_STORAGE = [
   "Kitchen Pantry",
   "Refrigerator",
   "Freezer",
@@ -51,6 +54,7 @@ export function FoodForm({
   storage,
   frequentlyUsed,
   toBuy,
+  rooms,
   onNameChange,
   onQuantityChange,
   onUnitChange,
@@ -62,6 +66,11 @@ export function FoodForm({
   onToBuyChange,
   onAddProduct,
 }: FoodFormProps) {
+  // Use rooms if available, otherwise use default food storage locations
+  const storageLocations =
+    rooms.length > 0
+      ? rooms.sort((a, b) => a.order - b.order).map((r) => r.name)
+      : DEFAULT_FOOD_STORAGE;
   return (
     <div className="compact-form food-form">
       <div className="form-header">
@@ -128,7 +137,7 @@ export function FoodForm({
             className="form-input"
           >
             <option value="">Select location</option>
-            {FOOD_STORAGE_LOCATIONS.map((loc) => (
+            {storageLocations.map((loc) => (
               <option key={loc} value={loc}>
                 {loc}
               </option>
