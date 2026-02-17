@@ -1,0 +1,93 @@
+.maintenance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+.maintenance-content {
+  text-align: center;
+  color: white;
+  padding: 40px;
+  max-width: 600px;
+}
+
+.maintenance-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.maintenance-title {
+  font-size: 48px;
+  font-weight: bold;
+  margin: 20px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.maintenance-message {
+  font-size: 20px;
+  margin: 20px 0;
+  line-height: 1.6;
+  opacity: 0.95;
+}
+
+.maintenance-submessage {
+  font-size: 16px;
+  margin: 10px 0 30px;
+  opacity: 0.85;
+}
+
+.maintenance-spinner {
+  margin-top: 40px;
+}
+
+.spinner {
+  margin: 0 auto;
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 768px) {
+  .maintenance-icon {
+    font-size: 60px;
+  }
+
+  .maintenance-title {
+    font-size: 36px;
+  }
+
+  .maintenance-message {
+    font-size: 18px;
+  }
+
+  .maintenance-submessage {
+    font-size: 14px;
+  }
+}

@@ -6,8 +6,6 @@ import { ChoresDashboard } from "../features/chores/ChoresDashboard";
 import { ConsumptionLogger } from "../features/inventory/ConsumptionLogger";
 import { AnalyticsDashboard } from "../features/dashboard/AnalyticsDashboard";
 import { SuggestionsPanel } from "../features/dashboard/SuggestionsPanel";
-import { MaintenancePage } from "../features/maintenance/MaintenancePage";
-import DataBackup from "../features/maintenance/DataBackup";
 import RoomCategoryManagement from "../features/chores/RoomCategoryManagement";
 import { ShoppingList } from "../features/shopping/ShoppingList";
 import { LandingPage } from "../shared/components/LandingPage";
@@ -52,8 +50,7 @@ function App({ householdId = "default-household" }: AppProps = {}) {
     addCategory,
     deleteCategory,
   } = useChores(householdId);
-  const { consumptionLogs, logConsumption, deleteOldLogs, deleteAllLogs } =
-    useConsumption(householdId);
+  const { consumptionLogs, logConsumption } = useConsumption(householdId);
 
   // ====================================
   // Event Handlers
@@ -243,16 +240,6 @@ function App({ householdId = "default-household" }: AppProps = {}) {
           />
         )}
 
-        {activeTab === "maintenance" && (
-          <MaintenancePage
-            products={products}
-            consumptionLogs={consumptionLogs}
-            chores={chores}
-            onClearOldLogs={deleteOldLogs}
-            onClearAllLogs={deleteAllLogs}
-          />
-        )}
-
         {activeTab === "settings" && (
           <div>
             <h2 className="settings-title">⚙️ Settings & Backup</h2>
@@ -276,12 +263,6 @@ function App({ householdId = "default-household" }: AppProps = {}) {
               onDeleteRoom={deleteRoom}
               onDeleteCategory={deleteCategory}
             />
-
-            {householdId && (
-              <div className="mt-40">
-                <DataBackup householdId={householdId} />
-              </div>
-            )}
           </div>
         )}
       </Layout>
