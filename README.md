@@ -9,11 +9,11 @@ A modern, feature-rich household management application built with React 18, Typ
 ## ✨ Key Features
 
 - **📦 Inventory Management** - Track food & household items with expiration dates
-- **👥 Multi-User Support** - Color-coded profiles for household members
+- **👥 User Profile Tracking** - Track activities by household member profiles
 - **🧹 Smart Chore System** - Automated scheduling with status tracking
 - **📊 Analytics Dashboard** - Usage patterns and consumption insights
 - **🤖 AI Suggestions** - Intelligent recommendations using Groq LLaMA 3.3
-- **📱 Real-time Sync** - Supabase backend with offline support
+- **📱 Real-time Sync** - Supabase backend for cloud storage
 - **📸 Receipt Scanner** - OCR text extraction (Macedonian & English)
 - **📷 Barcode Scanner** - Product lookup via OpenFoodFacts API
 
@@ -49,8 +49,16 @@ npm run dev
 Create `.env.local` with:
 
 ```env
+# Maintenance Mode
+# Set to "true" to show maintenance page instead of login
+# Set to "false" to show normal app
+VITE_MAINTENANCE_MODE=false
+
+# Supabase Configuration
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_KEY=your_supabase_anon_key
+
+# Groq API Configuration
 VITE_GROQ_API_KEY=your_groq_api_key
 ```
 
@@ -63,11 +71,12 @@ VITE_GROQ_API_KEY=your_groq_api_key
 - Storage location tracking with real-time updates
 - Barcode scanning for instant product lookup
 
-### Multi-User System
+### User Profile Tracking
 
 - Create household member profiles with avatars and colors
-- Track individual consumption and chore completion
-- Activity analytics per user with historical data
+- Track individual consumption and chore completion per profile
+- Activity analytics per profile with historical data
+- Note: Single-user authentication - profiles are for tracking only, not separate logins
 
 ### Smart Chores
 
@@ -108,7 +117,7 @@ src/
 
 - `households` - Multi-tenancy container
 - `products` - Inventory items with full metadata
-- `users` - Household members with profiles
+- `users` - Household member profiles (for tracking activities)
 - `chores` - Task definitions with scheduling
 - `consumption_logs` - Usage tracking with timestamps
 - `rooms` & `chore_categories` - Organization structures
@@ -162,7 +171,7 @@ Set environment variables in your deployment platform dashboard.
 This application demonstrates:
 
 - **Full-stack Development** - Frontend, backend, and database design
-- **Real-time Collaboration** - Multi-user synchronization patterns
+- **Real-time Data Sync** - Supabase real-time subscriptions
 - **AI Integration** - Practical LLM implementation with user controls
 - **Database Design** - Normalized schema with performance considerations
 - **Modern Deployment** - CI/CD ready with environment management
@@ -220,19 +229,12 @@ Detailed technical documentation is available in the [docs/](docs/) folder:
 - **Over-consumption detection**
 - **High usage warnings**
 
-### 👥 **Multi-User Support**
+### 👥 **User Profile Tracking**
 
 - **Color-coded user profiles** (10 avatars, 6 colors)
 - **Active user indicator** always visible
-- **Per-user activity tracking**
-- **Shared household management**
-
-### 💾 **Data Backup & Export**
-
-- **Automatic cloud backup** with Supabase
-- **Export to JSON** for local backups
-- **Import from JSON** for data migration
-- **Real-time sync** across devices
+- **Per-profile activity tracking** for consumption and chores
+- **Single-user authentication** (one login per household)
 
 ---
 
@@ -306,9 +308,7 @@ src/
 1. App connects to Supabase PostgreSQL
 2. All data syncs to secure cloud database
 3. Real-time listeners update all devices
-4. Offline support with sync queue
-5. Auto-backup every change
-6. Row-level security (RLS) protects data
+4. Row-level security (RLS) protects data
 
 ---
 
@@ -319,7 +319,7 @@ User Action
     ↓
 React State Update (immediate UI update)
     ↓
-localStorage Save (backup)
+localStorage Save (local persistence)
     ↓
 Supabase PostgreSQL Sync (if configured)
     ↓
@@ -346,13 +346,13 @@ Real-time Listener → Update Other Devices
 5. **📊 Analytics** - Alerts and user activity
 6. **🤖 AI Smart** - Intelligent suggestions + Natural language input
 7. **👥 Members** - Household user management
-8. **⚙️ Settings** - Backup, export, cloud syncanagement
+8. **⚙️ Settings** - Room & category management
 9. **🍽️ Consumption** - Log food usage
 10. **🧹 Chores** - Task management dashboard
 11. **📊 Analytics** - Alerts and user activity
 12. **🤖 AI Smart** - Intelligent suggestions
 13. **👥 Members** - Household user management
-14. **⚙️ Settings** - Backup, export, database status
+14. **⚙️ Settings** - Room & category management
 
 ---
 
@@ -495,25 +495,19 @@ npm run build
 - Use app with localStorage first
 - Set up Supabase when ready for multi-device sync
 
-### 2. **Export Backups Regularly**
-
-- Go to Settings → Export Backup
-- Save JSON file to computer
-- Import on new device if needed
-
-### 3. **Active User Selection**
+### 2. **Active User Selection**
 
 - Always select your profile in Members tab
 - System tracks consumption/chores by user
 - Makes analytics meaningful
 
-### 4. **Stock Level Management**
+### 3. **Stock Level Management**
 
 - Set realistic "Min Stock" levels
 - Get alerts when items run low
 - Use "To Buy" toggle for shopping list
 
-### 5. **Chore Frequency**
+### 4. **Chore Frequency**
 
 - Daily = 1 day
 - Weekly = 7 days
@@ -593,8 +587,6 @@ VITE_GROQ_API_KEY=your-groq-api-key-here
 ✅ AI-powered suggestions (Groq)
 ✅ Natural language input
 ✅ Shopping list management
-✅ Cloud backup (PostgreSQL)
-✅ Offline support
 ✅ Enterprise-grade database
 ✅ 8 major feature modules
 ✅ 20+ React components

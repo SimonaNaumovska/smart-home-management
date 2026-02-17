@@ -875,3 +875,74 @@ export const toggleToBuyStatus = async (
     return { success: false, error: error.message };
   }
 };
+
+// ====================================
+// HOUSEHOLD MEMBERS
+// ====================================
+
+export interface HouseholdMemberDb {
+  id: string;
+  household_id: string;
+  user_id: string;
+  role: "owner" | "member";
+  display_name: string | null;
+  joined_at: string;
+}
+
+export const getHouseholdMembers = async (
+  householdId: string,
+): Promise<HouseholdMemberDb[]> => {
+  try {
+    const { data, error } = await supabase
+      .from("household_members")
+      .select("*")
+      .eq("household_id", householdId);
+
+    if (error) throw error;
+    return data || [];
+  } catch (error: any) {
+    console.error("Error fetching household members:", error);
+    return [];
+  }
+};
+
+export const addHouseholdMember = async (
+  householdId: string,
+  userId: string,
+  role: "owner" | "member",
+  displayName: string,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase.from("household_members").insert({
+      household_id: householdId,
+      user_id: userId,
+      role,
+      display_name: displayName,
+    });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error adding household member:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const removeHouseholdMember = async (
+  householdId: string,
+  userId: string,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { error } = await supabase
+      .from("household_members")
+      .delete()
+      .eq("household_id", householdId)
+      .eq("user_id", userId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error removing household member:", error);
+    return { success: false, error: error.message };
+  }
+};
