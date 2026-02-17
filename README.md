@@ -4,7 +4,7 @@ A modern, feature-rich household management application built with React 18, Typ
 
 ## 🚀 Live Demo
 
-[View Live Application](your-deployment-url-here)
+[View Live Application](https://smart-home-management-six.vercel.app/)
 
 ## ✨ Key Features
 
