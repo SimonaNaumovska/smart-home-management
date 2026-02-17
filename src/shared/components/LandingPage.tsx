@@ -29,8 +29,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
         <div className="hero-content">
           <h1 className="hero-title">🏠 Smart Household Management</h1>
           <p className="hero-subtitle">
-            The modern solution for managing your household with AI-powered
-            efficiency
+            AI-powered household management with smart analytics and intelligent
+            features
           </p>
           <div className="hero-actions">
             <button
@@ -88,8 +88,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
               <div className="feature-icon">👥</div>
               <h3>Multi-User Collaboration</h3>
               <p>
-                Color-coded profiles for household members with real-time sync
-                across all devices.
+                Color-coded profiles for household members to track individual
+                consumption and task assignments.
               </p>
               <ul className="feature-list">
                 <li>✓ Individual consumption tracking</li>
@@ -113,44 +113,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">🤖</div>
-              <h3>AI-Powered Suggestions</h3>
-              <p>
-                Smart recommendations using advanced AI for meal planning and
-                shopping optimization.
-              </p>
-              <ul className="feature-list">
-                <li>✓ Natural language input</li>
-                <li>✓ Consumption pattern analysis</li>
-                <li>✓ Meal planning assistance</li>
-              </ul>
-            </div>
-
-            <div className="feature-card">
               <div className="feature-icon">📊</div>
-              <h3>Analytics Dashboard</h3>
+              <h3>AI Analytics Dashboard</h3>
               <p>
-                Comprehensive insights into household consumption patterns and
-                efficiency metrics.
+                Intelligent insights into household consumption patterns with
+                AI-powered analysis and recommendations.
               </p>
               <ul className="feature-list">
-                <li>✓ Usage trend analysis</li>
-                <li>✓ Cost optimization tips</li>
-                <li>✓ Performance tracking</li>
-              </ul>
-            </div>
-
-            <div className="feature-card">
-              <div className="feature-icon">📱</div>
-              <h3>Real-time Sync</h3>
-              <p>
-                Seamless synchronization across devices with offline support and
-                instant updates.
-              </p>
-              <ul className="feature-list">
-                <li>✓ Cross-device compatibility</li>
-                <li>✓ Offline functionality</li>
-                <li>✓ Cloud backup</li>
+                <li>✓ Consumption insights</li>
+                <li>✓ Smart recommendations</li>
+                <li>✓ Pattern analysis</li>
               </ul>
             </div>
           </div>
@@ -169,8 +141,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   <div>
                     <h4>Save Time</h4>
                     <p>
-                      Reduce planning time by 70% with automated suggestions and
-                      smart scheduling
+                      Streamline household management with smart chore
+                      scheduling and inventory tracking
                     </p>
                   </div>
                 </div>
@@ -195,12 +167,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   </div>
                 </div>
                 <div className="benefit">
-                  <span className="benefit-icon">🔍</span>
+                  <span className="benefit-icon">🤖</span>
                   <div>
-                    <h4>Gain Insights</h4>
+                    <h4>AI-Powered Insights</h4>
                     <p>
-                      Make data-driven decisions about your household
-                      consumption and habits
+                      Get intelligent recommendations powered by AI analysis of
+                      your household patterns
                     </p>
                   </div>
                 </div>
@@ -217,8 +189,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                   <div className="stat-label">Less Waste</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-number">24/7</div>
-                  <div className="stat-label">Sync Access</div>
+                  <div className="stat-number">∞</div>
+                  <div className="stat-label">Scalable</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-number">AI</div>
@@ -248,12 +220,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
               <span>Supabase</span>
             </div>
             <div className="tech-item">
-              <span className="tech-icon">🤖</span>
-              <span>Groq AI</span>
+              <span className="tech-icon">📊</span>
+              <span>Smart Analytics</span>
             </div>
             <div className="tech-item">
-              <span className="tech-icon">📱</span>
-              <span>PWA Ready</span>
+              <span className="tech-icon">⚡</span>
+              <span>Fast & Responsive</span>
             </div>
             <div className="tech-item">
               <span className="tech-icon">🔒</span>
@@ -302,15 +274,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginSuccess }) => {
                 <li>Inventory Management</li>
                 <li>Multi-User Support</li>
                 <li>Smart Chores</li>
-                <li>AI Suggestions</li>
+                <li>Analytics Dashboard</li>
               </ul>
             </div>
             <div className="footer-section">
               <h4>Technology</h4>
               <ul>
                 <li>React & TypeScript</li>
-                <li>Real-time Sync</li>
-                <li>Cloud Storage</li>
+                <li>Smart Analytics</li>
+                <li>Data Persistence</li>
                 <li>Mobile Optimized</li>
               </ul>
             </div>

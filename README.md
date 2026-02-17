@@ -92,8 +92,7 @@ src/
 │   ├── inventory/      # Product management
 │   ├── chores/        # Task management
 │   ├── shopping/      # Shopping list functionality
-│   ├── users/         # User management
-│   └── maintenance/   # System maintenance
+│   └── users/         # User management
 ├── shared/            # Shared resources
 │   ├── components/    # Reusable components
 │   ├── hooks/         # Custom React hooks
@@ -278,14 +277,10 @@ src/
 │   ├── BarcodeScanner.tsx           # Barcode scanning (html5-qrcode)
 │   ├── UserManagement.tsx           # Household member management
 │   ├── ChoresDashboard.tsx          # 14-column chore management
-│   ├── ChoreSystem.tsx              # Original chore component
 │   ├── ConsumptionLogger.tsx        # Food consumption logging
 │   ├── AnalyticsDashboard.tsx       # Alerts and user stats
-│   ├── AISuggestions.tsx            # AI-powered suggestions
 │   ├── NaturalLanguageLogger.tsx    # Natural language input via AI
-│   ├── SuggestionsPanel.tsx         # AI suggestions display
-│   ├── OfflineIndicator.tsx         # Offline mode banner
-│   └── DataBackup.tsx               # Export/import functionality
+│   └── SuggestionsPanel.tsx         # AI suggestions display
 │
 ├── supabase/
 │   ├── config.ts                    # Supabase client configuration

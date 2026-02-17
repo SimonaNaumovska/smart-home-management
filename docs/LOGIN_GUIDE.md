@@ -169,8 +169,7 @@ src/
 ├── shared/
 │   └── components/
 │       ├── Login.tsx      # Login/signup UI
-│       ├── LandingPage.tsx # Landing page with auth
-│       └── OfflineIndicator.tsx  # Connection status
+│       └── LandingPage.tsx # Landing page with auth
 └── app/
     └── App.tsx            # Main application
 ```
