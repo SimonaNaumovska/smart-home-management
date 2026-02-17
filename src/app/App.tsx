@@ -9,25 +9,43 @@ import { SuggestionsPanel } from "../features/dashboard/SuggestionsPanel";
 import RoomCategoryManagement from "../features/chores/RoomCategoryManagement";
 import { ShoppingList } from "../features/shopping/ShoppingList";
 import { LandingPage } from "../shared/components/LandingPage";
+import { HouseholdSetup } from "../shared/components/HouseholdSetup";
+import { HouseholdInfo } from "../shared/components/HouseholdInfo";
 import { Sidebar, Layout } from "../shared/components/Layout";
 import { useAuth } from "../shared/hooks/useAuth";
+import { useHousehold } from "../shared/hooks/useHousehold";
 import { useProducts } from "../shared/hooks/useProducts";
 import { useUsers } from "../shared/hooks/useUsers";
 import { useChores } from "../shared/hooks/useChores";
 import { useConsumption } from "../shared/hooks/useConsumption";
 import "../App.css";
 
-interface AppProps {
-  householdId?: string;
-}
-
-function App({ householdId = "default-household" }: AppProps = {}) {
+function App() {
   const [activeTab, setActiveTab] = useState<string>("inventory");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Use custom hooks
-  const { isAuthenticated, currentUserEmail, authChecking, signOut } =
-    useAuth();
+  // Authentication
+  const {
+    isAuthenticated,
+    currentUserEmail,
+    currentUserId,
+    authChecking,
+    signOut,
+  } = useAuth();
+
+  // Household management
+  const {
+    household,
+    householdMembers,
+    loading: householdLoading,
+    createHousehold,
+    joinHousehold,
+  } = useHousehold(currentUserId);
+
+  // Get household ID or fallback
+  const householdId = household?.id || "default-household";
+
+  // Use custom hooks with actual household ID
   const {
     products,
     addProduct,
@@ -153,12 +171,27 @@ function App({ householdId = "default-household" }: AppProps = {}) {
   // Render
   // ====================================
 
-  if (authChecking) {
+  if (authChecking || householdLoading) {
     return <div className="login-container">Loading...</div>;
   }
 
   if (!isAuthenticated) {
     return <LandingPage onLoginSuccess={() => {}} />;
+  }
+
+  // Show household setup if user doesn't have a household
+  if (!household) {
+    return (
+      <HouseholdSetup
+        userEmail={currentUserEmail}
+        onHouseholdCreated={(id) => {
+          console.log("Household created/joined:", id);
+          // Household hook will auto-refresh
+        }}
+        onCreateHousehold={createHousehold}
+        onJoinHousehold={joinHousehold}
+      />
+    );
   }
 
   return (
@@ -242,18 +275,15 @@ function App({ householdId = "default-household" }: AppProps = {}) {
 
         {activeTab === "settings" && (
           <div>
-            <h2 className="settings-title">⚙️ Settings & Backup</h2>
+            <h2 className="settings-title">⚙️ Settings</h2>
 
-            <div className="settings-card cloud-sync">
-              <h3 className="settings-card-title cloud-sync">
-                ☁️ Cloud Sync Status
-              </h3>
-              <p className="settings-card-description">
-                Your household data is automatically syncing to the cloud in
-                real-time. All changes are backed up instantly and synced across
-                all devices.
-              </p>
-            </div>
+            {household && (
+              <HouseholdInfo
+                household={household}
+                members={householdMembers}
+                currentUserId={currentUserId}
+              />
+            )}
 
             <RoomCategoryManagement
               rooms={rooms}
