@@ -70,8 +70,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
         fontFamily:
           "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen'",
         padding: "20px",
