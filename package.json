@@ -1,13 +1,17 @@
 {
   "name": "smart-home-management",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "A modern household management system with real-time sync and AI features",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write src/**/*.{ts,tsx}",
+    "clean": "rm -rf dist node_modules/.vite"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
