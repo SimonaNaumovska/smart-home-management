@@ -241,7 +241,7 @@ export function logSuggestionFeedback(
     timestamp: Date.now(),
   };
 
-  // Store in localStorage for now (can migrate to Firebase/backend later)
+  // Store in localStorage for now (can migrate to Supabase/backend later)
   const existingFeedback = localStorage.getItem("suggestionFeedback");
   const feedbackArray = existingFeedback ? JSON.parse(existingFeedback) : [];
   feedbackArray.push(feedbackLog);

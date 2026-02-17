@@ -25,7 +25,7 @@
 
 1. Go to **SQL Editor** (left sidebar)
 2. Click **New Query**
-3. Open the file `supabase-schema.sql` in this folder
+3. Open the file `supabase-schema-regenerated.sql` in this folder
 4. Copy ALL the SQL code
 5. Paste into Supabase SQL Editor
 6. Click **Run** button (top right)
@@ -54,12 +54,13 @@ npm run dev
 
 ## What Just Happened?
 
-| Before            | After                 |
-| ----------------- | --------------------- |
-| Firebase (NoSQL)  | Supabase (PostgreSQL) |
-| ~25/month cost    | ~0-5/month            |
-| Limited queries   | Full SQL access       |
-| Firebase specific | Standard PostgreSQL   |
+You now have a fully functional smart home management system powered by:
+
+- **PostgreSQL** database with Supabase
+- **Real-time sync** across devices
+- **Full SQL** query capabilities
+- **Free tier** for most household uses (~0-5/month)
+- **Standard PostgreSQL** (portable, no vendor lock-in)
 
 ## Verify It Works
 
@@ -83,7 +84,7 @@ npm run dev
 
 **"Table doesn't exist"**
 
-- Run SQL schema again from `supabase-schema.sql`
+- Run SQL schema again from `supabase-schema-regenerated.sql`
 
 ---
 

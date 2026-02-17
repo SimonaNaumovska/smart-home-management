@@ -234,7 +234,7 @@ JSON.parse(localStorage.getItem("suggestionFeedback"));
 
 ### Future Improvements
 
-- Export feedback to Firebase for better ML training
+- Export feedback to Supabase for better ML training
 - Analyze acceptance rates by suggestion type
 - Improve confidence calibration over time
 

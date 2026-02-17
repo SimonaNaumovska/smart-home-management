@@ -41,37 +41,41 @@ The app now includes **client-side receipt scanning** using Tesseract.js OCR. Th
    npm install @google-cloud/vision
    ```
 
-2. **Create Firebase Function** (backend proxy)
+2. **Create Supabase Edge Function** (backend proxy)
 
    ```typescript
-   // functions/src/index.ts
-   import * as functions from "firebase-functions";
-   import vision from "@google-cloud/vision";
+   // supabase/functions/scan-receipt/index.ts
+   import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+   import { ImageAnnotatorClient } from "npm:@google-cloud/vision@4";
 
-   const client = new vision.ImageAnnotatorClient();
+   const client = new ImageAnnotatorClient();
 
-   export const scanReceipt = functions.https.onCall(async (data) => {
-     const imageBase64 = data.image;
+   serve(async (req) => {
+     const { image } = await req.json();
 
      const [result] = await client.textDetection({
-       image: { content: imageBase64 },
+       image: { content: image },
      });
 
-     return result.fullTextAnnotation?.text || "";
+     return new Response(
+       JSON.stringify({ text: result.fullTextAnnotation?.text || "" }),
+       { headers: { "Content-Type": "application/json" } },
+     );
    });
    ```
 
 3. **Update ReceiptScanner.tsx**
 
    ```typescript
-   import { getFunctions, httpsCallable } from "firebase/functions";
+   import { supabase } from "../../supabase/config";
 
    const processReceipt = async () => {
-     const functions = getFunctions();
-     const scanReceipt = httpsCallable(functions, "scanReceipt");
+     const { data, error } = await supabase.functions.invoke("scan-receipt", {
+       body: { image: imageBase64 },
+     });
 
-     const result = await scanReceipt({ image: imageBase64 });
-     const text = result.data as string;
+     if (error) throw error;
+     const text = data.text;
      const items = parseReceiptText(text);
      setParsedItems(items);
    };
@@ -86,7 +90,7 @@ The app now includes **client-side receipt scanning** using Tesseract.js OCR. Th
 
 #### Cons:
 
-- ❌ Requires backend (Firebase Functions)
+- ❌ Requires backend (Supabase Edge Functions)
 - ❌ Costs money after free tier
 - ❌ Requires API keys/setup
 
@@ -108,7 +112,7 @@ The app now includes **client-side receipt scanning** using Tesseract.js OCR. Th
    npm install openai
    ```
 
-2. **Create Firebase Function**
+2. **Create Supabase Edge Function**
 
    ```typescript
    import OpenAI from "openai";

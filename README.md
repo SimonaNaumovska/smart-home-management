@@ -230,10 +230,10 @@ Detailed technical documentation is available in the [docs/](docs/) folder:
 
 ### 💾 **Data Backup & Export**
 
-- **Automatic cloud backup** (if Firebase configured)
+- **Automatic cloud backup** with Supabase
 - **Export to JSON** for local backups
 - **Import from JSON** for data migration
-- **localStorage fallback** if no Firebase
+- **Real-time sync** across devices
 
 ---
 
@@ -357,7 +357,7 @@ Real-time Listener → Update Other Devices
 11. **📊 Analytics** - Alerts and user activity
 12. **🤖 AI Smart** - Intelligent suggestions
 13. **👥 Members** - Household user management
-14. **⚙️ Settings** - Backup, export, Firebase status
+14. **⚙️ Settings** - Backup, export, database status
 
 ---
 
@@ -487,9 +487,9 @@ npm run build
 ## 📚 Documentation Files
 
 - **README.md** (this file) - Complete overview
+- **[docs/QUICK_START.md](docs/QUICK_START.md)** - 5-minute Supabase setup guide
 - **supabase-schema-regenerated.sql** - Database schema (run in Supabase SQL editor)
 - **package.json** - Dependencies and scripts
-- **FIREBASE_SETUP.md** - Legacy Firebase setup (archived, not needed)
 
 ---
 

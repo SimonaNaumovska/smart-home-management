@@ -165,18 +165,4 @@ The app will:
 - ✅ Sync real-time updates via Supabase subscriptions
 - ✅ All data persists across sessions
 
-## Key Differences from Firebase
-
-| Firebase            | Supabase                |
-| ------------------- | ----------------------- |
-| Collections         | PostgreSQL Tables       |
-| Real-time listeners | Real-time subscriptions |
-| Serverless          | PostgreSQL + Node.js    |
-| Pay per write       | Pay per month           |
-
-## Migration Notes
-
-- Household ID is now UUID (instead of being passed as parameter)
-- All queries are SQL-based
-- Real-time syncing via `subscription()`
-- No need for `useFirebase` flag - always uses Supabase
+---
