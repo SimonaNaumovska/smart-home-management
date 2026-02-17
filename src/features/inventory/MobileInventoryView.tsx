@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import type { Product } from "../types/Product";
+import type { Product } from "../../types/Product";
 import "./MobileInventory.css";
 
 interface MobileInventoryViewProps {
@@ -297,50 +297,52 @@ export function MobileInventoryView({
       <div className="mobile-product-group">
         <h3 className="mobile-group-title">📦 All Items</h3>
 
-        {Object.entries(categorizedProducts).map(([category, items]) => {
-          const isExpanded = expandedCategory === category;
+        {Object.entries(categorizedProducts).map(
+          ([category, items]: [string, Product[]]) => {
+            const isExpanded = expandedCategory === category;
 
-          return (
-            <div key={category} className="mobile-accordion">
-              <button
-                className="mobile-accordion-header"
-                onClick={() =>
-                  setExpandedCategory(isExpanded ? null : category)
-                }
-              >
-                <span className="accordion-title">
-                  {isExpanded ? "▼" : "▶"} {category} ({items.length})
-                </span>
-              </button>
+            return (
+              <div key={category} className="mobile-accordion">
+                <button
+                  className="mobile-accordion-header"
+                  onClick={() =>
+                    setExpandedCategory(isExpanded ? null : category)
+                  }
+                >
+                  <span className="accordion-title">
+                    {isExpanded ? "▼" : "▶"} {category} ({items.length})
+                  </span>
+                </button>
 
-              {isExpanded && (
-                <div className="mobile-accordion-content">
-                  {items.map((product) => (
-                    <div
-                      key={product.id}
-                      className="mobile-product-row"
-                      onClick={() => handleProductTap(product)}
-                    >
-                      <div className="mobile-product-info">
-                        <span className="mobile-product-name">
-                          {product.name}
-                        </span>
+                {isExpanded && (
+                  <div className="mobile-accordion-content">
+                    {items.map((product) => (
+                      <div
+                        key={product.id}
+                        className="mobile-product-row"
+                        onClick={() => handleProductTap(product)}
+                      >
+                        <div className="mobile-product-info">
+                          <span className="mobile-product-name">
+                            {product.name}
+                          </span>
+                        </div>
+                        <div className="mobile-product-status">
+                          <span className="mobile-product-quantity">
+                            {product.quantity} {product.unit}
+                          </span>
+                          <span className="mobile-stock-icon">
+                            {getStockIcon(getStockStatus(product))}
+                          </span>
+                        </div>
                       </div>
-                      <div className="mobile-product-status">
-                        <span className="mobile-product-quantity">
-                          {product.quantity} {product.unit}
-                        </span>
-                        <span className="mobile-stock-icon">
-                          {getStockIcon(getStockStatus(product))}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          },
+        )}
       </div>
 
       {/* Bottom Sheet Modal */}
