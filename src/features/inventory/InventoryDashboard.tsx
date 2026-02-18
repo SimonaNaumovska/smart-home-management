@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { Product } from "../../types/Product";
+import { useInventoryDashboard } from "./useInventoryDashboard";
 
 interface InventoryDashboardProps {
   products: Product[];
@@ -12,92 +12,22 @@ export function InventoryDashboard({
   onUpdateProduct,
   onDeleteProduct,
 }: InventoryDashboardProps) {
-  const [filterCategory, setFilterCategory] = useState<string>("All");
-  const [filterStorage, setFilterStorage] = useState<string>("All");
-  const [sortBy, setSortBy] = useState<
-    "name" | "category" | "quantity" | "useBy"
-  >("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-
-  // Get unique categories and storage locations
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
-  const storageLocations = ["All", ...new Set(products.map((p) => p.storage))];
-
-  // Calculate stock level
-  const getStockLevel = (product: Product): string => {
-    if (product.quantity === 0) return "None";
-    if (product.quantity <= product.minStock) return "Low";
-    if (product.quantity <= product.minStock * 1.5) return "Medium";
-    return "High";
-  };
-
-  const getStockLevelColor = (level: string): string => {
-    switch (level) {
-      case "None":
-        return "#f44336";
-      case "Low":
-        return "#FF9800";
-      case "Medium":
-        return "#FFC107";
-      case "High":
-        return "#4CAF50";
-      default:
-        return "#9E9E9E";
-    }
-  };
-
-  // Check if product is expired
-  const isExpired = (product: Product): boolean => {
-    if (!product.useBy) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const expiryDate = new Date(product.useBy);
-    expiryDate.setHours(0, 0, 0, 0);
-    return expiryDate < today;
-  };
-
-  // Check if product expires soon (within 7 days)
-  const expiresSoon = (product: Product): boolean => {
-    if (!product.useBy) return false;
-    const today = new Date();
-    const in7Days = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const expiryDate = new Date(product.useBy);
-    return expiryDate >= today && expiryDate <= in7Days;
-  };
-
-  // Filter products
-  let filteredProducts = products;
-  if (filterCategory !== "All") {
-    filteredProducts = filteredProducts.filter(
-      (p) => p.category === filterCategory,
-    );
-  }
-  if (filterStorage !== "All") {
-    filteredProducts = filteredProducts.filter(
-      (p) => p.storage === filterStorage,
-    );
-  }
-
-  // Sort products
-  const sortedProducts = [...filteredProducts].sort((a, b) => {
-    let compareValue = 0;
-
-    switch (sortBy) {
-      case "name":
-        compareValue = a.name.localeCompare(b.name);
-        break;
-      case "category":
-        compareValue = a.category.localeCompare(b.category);
-        break;
-      case "quantity":
-        compareValue = a.quantity - b.quantity;
-        break;
-      case "useBy":
-        if (!a.useBy && !b.useBy) compareValue = 0;
-        else if (!a.useBy) compareValue = 1;
-        else if (!b.useBy) compareValue = -1;
-        else
-          compareValue =
+  const {
+    filterCategory,
+    filterStorage,
+    sortBy,
+    sortOrder,
+    categories,
+    storageLocations,
+    sortedProducts,
+    setFilterCategory,
+    setFilterStorage,
+    getStockLevel,
+    getStockLevelColor,
+    isExpired,
+    expiresSoon,
+    handleSort,
+  } = useInventoryDashboard({ products });
             new Date(a.useBy).getTime() - new Date(b.useBy).getTime();
         break;
     }

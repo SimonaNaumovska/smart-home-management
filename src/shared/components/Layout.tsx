@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
+import { NavLink } from "react-router-dom";
+import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Box from "@mui/material/Box";
+import MenuIcon from "@mui/icons-material/Menu";
 import "./Layout.css";
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   userEmail: string;
   onSignOut: () => void;
   isOpen: boolean;
@@ -11,26 +14,23 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({
-  activeTab,
-  onTabChange,
   userEmail,
   onSignOut,
   isOpen,
   onToggle,
 }: SidebarProps) => {
   const menuItems = [
-    { key: "inventory", label: "Inventory", icon: "📦" },
-    { key: "shopping", label: "Shopping", icon: "🛒" },
-    { key: "consumption", label: "Consumption", icon: "🍽️" },
-    { key: "chores", label: "Chores", icon: "🧹" },
-    { key: "analytics", label: "Analytics", icon: "📊" },
-    { key: "ai", label: "AI Smart", icon: "🤖" },
-    { key: "members", label: "Members", icon: "👥" },
-    { key: "settings", label: "Settings", icon: "⚙️" },
+    { path: "/", label: "Analytics", icon: "📊" },
+    { path: "/inventory", label: "Inventory", icon: "📦" },
+    { path: "/shopping", label: "Shopping", icon: "🛒" },
+    { path: "/consumption", label: "Consumption", icon: "🍽️" },
+    { path: "/chores", label: "Chores", icon: "🧹" },
+    { path: "/ai", label: "AI Smart", icon: "🤖" },
+    { path: "/members", label: "Members", icon: "👥" },
+    { path: "/settings", label: "Settings", icon: "⚙️" },
   ];
 
-  const handleNavClick = (key: string) => {
-    onTabChange(key);
+  const handleNavClick = () => {
     // Close sidebar on mobile after navigation
     if (window.innerWidth <= 768) {
       onToggle();
@@ -61,14 +61,18 @@ export const Sidebar = ({
 
         <nav className="sidebar-nav">
           {menuItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => handleNavClick(item.key)}
-              className={`sidebar-nav-item ${activeTab === item.key ? "active" : ""}`}
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={handleNavClick}
+              className={({ isActive }) =>
+                `sidebar-nav-item ${isActive ? "active" : ""}`
+              }
+              end={item.path === "/"}
             >
               <span className="sidebar-nav-icon">{item.icon}</span>
               <span className="sidebar-nav-label">{item.label}</span>
-            </button>
+            </NavLink>
           ))}
         </nav>
 
@@ -78,9 +82,16 @@ export const Sidebar = ({
               <span className="sidebar-user-icon">👤</span>
               <span className="sidebar-user-email">{userEmail}</span>
             </div>
-            <button onClick={onSignOut} className="sidebar-signout-btn">
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={onSignOut}
+              className="sidebar-signout-btn"
+              fullWidth
+              size="small"
+            >
               Sign Out
-            </button>
+            </Button>
           </div>
         </div>
       </aside>
@@ -100,21 +111,23 @@ export const Layout = ({
   onToggleSidebar,
 }: LayoutProps) => {
   return (
-    <div className="layout-container">
+    <Box className="layout-container">
       {/* Hamburger menu button */}
-      <button
+      <IconButton
         className="hamburger-btn"
         onClick={onToggleSidebar}
         aria-label="Toggle menu"
+        color="primary"
       >
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-        <span className="hamburger-line"></span>
-      </button>
+        <MenuIcon />
+      </IconButton>
 
-      <main className={`layout-main ${isSidebarOpen ? "sidebar-open" : ""}`}>
+      <Box
+        component="main"
+        className={`layout-main ${isSidebarOpen ? "sidebar-open" : ""}`}
+      >
         {children}
-      </main>
-    </div>
+      </Box>
+    </Box>
   );
 };

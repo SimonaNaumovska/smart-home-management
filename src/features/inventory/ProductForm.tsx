@@ -1,4 +1,16 @@
 import type { Room } from "../../types/Product";
+import { useProductForm } from "./useProductForm";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Checkbox from "@mui/material/Checkbox";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
 
 interface ProductFormProps {
   name: string;
@@ -25,32 +37,6 @@ interface ProductFormProps {
   onAddProduct: () => void;
 }
 
-const CATEGORIES = [
-  "Food & Beverage",
-  "Cleaning",
-  "Health & Wellness",
-  "Electronics",
-  "Toiletries",
-  "Laundry",
-  "Kitchen",
-  "Pantry",
-  "Other",
-];
-
-// Fallback storage locations if no rooms are defined
-const DEFAULT_STORAGE_LOCATIONS = [
-  "Kitchen Pantry",
-  "Refrigerator",
-  "Freezer",
-  "Bedroom",
-  "Bathroom",
-  "Laundry Room",
-  "Garage",
-  "Living Room",
-  "Storage Closet",
-  "Other",
-];
-
 export function ProductForm({
   name,
   category,
@@ -75,128 +61,155 @@ export function ProductForm({
   onFrequentlyUsedChange,
   onAddProduct,
 }: ProductFormProps) {
-  // Use rooms if available, otherwise use default locations
-  const storageLocations =
-    rooms.length > 0
-      ? rooms.sort((a, b) => a.order - b.order).map((r) => r.name)
-      : DEFAULT_STORAGE_LOCATIONS;
+  const { storageLocations, categories } = useProductForm({ rooms });
   return (
-    <>
-      <h2>Add Product</h2>
+    <Box>
+      <Typography variant="h5" component="h2" gutterBottom>
+        Add Product
+      </Typography>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "10px",
-          marginBottom: "10px",
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Item Name"
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-        />
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Item Name"
+            placeholder="Item Name"
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            variant="outlined"
+          />
+        </Grid>
 
-        <select
-          value={category}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          style={{
-            padding: "6px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
-        >
-          <option value="">Select Category</option>
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel>Category</InputLabel>
+            <Select
+              value={category}
+              onChange={(e) => onCategoryChange(e.target.value)}
+              label="Category"
+            >
+              <MenuItem value="">Select Category</MenuItem>
+              {categories.map((cat) => (
+                <MenuItem key={cat} value={cat}>
+                  {cat}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
 
-        <input
-          type="number"
-          placeholder="Quantity"
-          value={quantity}
-          onChange={(e) => onQuantityChange(e.target.value)}
-        />
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            type="number"
+            label="Quantity"
+            placeholder="Quantity"
+            value={quantity}
+            onChange={(e) => onQuantityChange(e.target.value)}
+            variant="outlined"
+          />
+        </Grid>
 
-        <input
-          type="text"
-          placeholder="Unit"
-          value={unit}
-          onChange={(e) => onUnitChange(e.target.value)}
-        />
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            label="Unit"
+            placeholder="Unit"
+            value={unit}
+            onChange={(e) => onUnitChange(e.target.value)}
+            variant="outlined"
+          />
+        </Grid>
 
-        <input
-          type="number"
-          placeholder="Min Stock Level"
-          value={minStock}
-          onChange={(e) => onMinStockChange(e.target.value)}
-        />
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            type="number"
+            label="Min Stock Level"
+            placeholder="Min Stock Level"
+            value={minStock}
+            onChange={(e) => onMinStockChange(e.target.value)}
+            variant="outlined"
+          />
+        </Grid>
 
-        <select
-          value={storage}
-          onChange={(e) => onStorageChange(e.target.value)}
-          style={{
-            padding: "6px",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-          }}
-        >
-          <option value="">Select Storage Location</option>
-          {storageLocations.map((loc) => (
-            <option key={loc} value={loc}>
-              {loc}
-            </option>
-          ))}
-        </select>
+        <Grid item xs={12} sm={6}>
+          <FormControl fullWidth>
+            <InputLabel>Storage Location</InputLabel>
+            <Select
+              value={storage}
+              onChange={(e) => onStorageChange(e.target.value)}
+              label="Storage Location"
+            >
+              <MenuItem value="">Select Storage Location</MenuItem>
+              {storageLocations.map((loc) => (
+                <MenuItem key={loc} value={loc}>
+                  {loc}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
 
-        <input
-          type="date"
-          placeholder="Purchased"
-          value={purchased}
-          onChange={(e) => onPurchasedChange(e.target.value)}
-        />
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            type="date"
+            label="Purchased"
+            value={purchased}
+            onChange={(e) => onPurchasedChange(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
 
-        <input
-          type="date"
-          placeholder="Use By"
-          value={useBy}
-          onChange={(e) => onUseByChange(e.target.value)}
-        />
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            type="date"
+            label="Use By"
+            value={useBy}
+            onChange={(e) => onUseByChange(e.target.value)}
+            variant="outlined"
+            InputLabelProps={{ shrink: true }}
+          />
+        </Grid>
 
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={toBuy}
-              onChange={(e) => onToBuyChange(e.target.checked)}
-            />{" "}
-            To Buy?
-          </label>
-        </div>
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={toBuy}
+                onChange={(e) => onToBuyChange(e.target.checked)}
+              />
+            }
+            label="To Buy?"
+          />
+        </Grid>
 
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={frequentlyUsed}
-              onChange={(e) => onFrequentlyUsedChange(e.target.checked)}
-            />{" "}
-            Frequently Used?
-          </label>
-        </div>
-      </div>
+        <Grid item xs={12} sm={6}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={frequentlyUsed}
+                onChange={(e) => onFrequentlyUsedChange(e.target.checked)}
+              />
+            }
+            label="Frequently Used?"
+          />
+        </Grid>
+      </Grid>
 
-      <button
+      <Button
         onClick={onAddProduct}
-        style={{ padding: "10px 20px", cursor: "pointer" }}
+        variant="contained"
+        color="primary"
+        fullWidth
+        sx={{ mt: 2 }}
+        size="large"
       >
         Add
-      </button>
-    </>
+      </Button>
+    </Box>
   );
 }

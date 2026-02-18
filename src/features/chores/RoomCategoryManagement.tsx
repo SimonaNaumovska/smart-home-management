@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import type { Room, ChoreCategory } from "../../types/Product";
+import { useRoomCategoryManagement } from "./useRoomCategoryManagement";
 
 interface RoomCategoryManagementProps {
   rooms: Room[];
@@ -18,68 +19,30 @@ const RoomCategoryManagement: React.FC<RoomCategoryManagementProps> = ({
   onAddCategory,
   onDeleteCategory,
 }) => {
-  const [newRoomName, setNewRoomName] = useState("");
-  const [newRoomIcon, setNewRoomIcon] = useState("🛏️");
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryIcon, setNewCategoryIcon] = useState("📋");
-  const [newCategoryFrequency, setNewCategoryFrequency] = useState(7);
-  const [activeTab, setActiveTab] = useState<"rooms" | "frequencies">("rooms");
-
-  const roomEmojis = ["🛏️", "🚿", "🍳", "🛋️", "🧹", "🌳", "🚪", "📚", "🏠"];
-  const categoryEmojis = [
-    "📋",
-    "🧹",
-    "🧼",
-    "🧳",
-    "🍳",
-    "🧵",
-    "💧",
-    "🌿",
-    "⚙️",
-    "❄️",
-    "🌸",
-    "🍂",
-    "☀️",
-  ];
-
-  const handleAddRoom = () => {
-    if (!newRoomName.trim()) return;
-    onAddRoom({
-      name: newRoomName,
-      icon: newRoomIcon,
-      order: rooms.length,
-    });
-    setNewRoomName("");
-    setNewRoomIcon("🛏️");
-  };
-
-  const handleAddCategory = () => {
-    if (!newCategoryName.trim()) return;
-    if (newCategoryFrequency < 1) {
-      alert("Frequency must be at least 1 day");
-      return;
-    }
-    onAddCategory({
-      name: newCategoryName,
-      icon: newCategoryIcon,
-      frequencyDays: newCategoryFrequency,
-      order: categories.length,
-    });
-    setNewCategoryName("");
-    setNewCategoryIcon("📋");
-    setNewCategoryFrequency(7);
-  };
-
-  // Helper function to format frequency days into a human-readable string
-  const formatFrequency = (days: number): string => {
-    if (days === 1) return "Every day";
-    if (days === 7) return "Every week";
-    if (days === 14) return "Every 2 weeks";
-    if (days === 30) return "Every month";
-    if (days === 90) return "Every 3 months";
-    if (days === 180) return "Every 6 months";
-    return `Every ${days} days`;
-  };
+  const {
+    newRoomName,
+    setNewRoomName,
+    newRoomIcon,
+    setNewRoomIcon,
+    newCategoryName,
+    setNewCategoryName,
+    newCategoryIcon,
+    setNewCategoryIcon,
+    newCategoryFrequency,
+    setNewCategoryFrequency,
+    activeTab,
+    setActiveTab,
+    roomEmojis,
+    categoryEmojis,
+    handleAddRoom,
+    handleAddCategory,
+    formatFrequency,
+  } = useRoomCategoryManagement({
+    rooms,
+    categories,
+    onAddRoom,
+    onAddCategory,
+  });
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px" }}>

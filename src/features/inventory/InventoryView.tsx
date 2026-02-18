@@ -1,11 +1,23 @@
-import { useState, useEffect } from "react";
 import type { Product, User, Room } from "../../types/Product";
+import { useInventoryView } from "./useInventoryView";
 import { FoodForm } from "./FoodForm";
 import { CleaningForm } from "./CleaningForm";
 import { ProductList } from "./ProductList";
 import { ReceiptScanner } from "./ReceiptScanner";
 import BarcodeScanner from "./BarcodeScanner";
 import { MobileInventoryView } from "./MobileInventoryView";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
+import Chip from "@mui/material/Chip";
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import AddIcon from "@mui/icons-material/Add";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface InventoryViewProps {
   products: Product[];
@@ -26,177 +38,57 @@ export const InventoryView = ({
   onDeleteProduct,
   onBulkAddItems,
 }: InventoryViewProps) => {
-  const [inventoryTab, setInventoryTab] = useState<"food" | "cleaning">("food");
-  const [inventoryView, setInventoryView] = useState<
-    "form" | "dashboard" | "receipt" | "barcode"
-  >("dashboard");
-  const [isMobileView, setIsMobileView] = useState(false);
-
-  // Detect mobile view
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobileView(window.innerWidth <= 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  // Food form states
-  const [foodName, setFoodName] = useState("");
-  const [foodQuantity, setFoodQuantity] = useState("");
-  const [foodUnit, setFoodUnit] = useState("kg");
-  const [foodMinStock, setFoodMinStock] = useState("");
-  const [foodPurchased, setFoodPurchased] = useState("");
-  const [foodUseBy, setFoodUseBy] = useState("");
-  const [foodStorage, setFoodStorage] = useState("");
-  const [foodFrequentlyUsed, setFoodFrequentlyUsed] = useState(false);
-  const [foodToBuy, setFoodToBuy] = useState(false);
-
-  // Cleaning form states
-  const [cleaningName, setCleaningName] = useState("");
-  const [cleaningQuantity, setCleaningQuantity] = useState("");
-  const [cleaningUnit, setCleaningUnit] = useState("L");
-  const [cleaningMinStock, setCleaningMinStock] = useState("");
-  const [cleaningPurchased, setCleaningPurchased] = useState("");
-  const [cleaningStorage, setCleaningStorage] = useState("");
-  const [cleaningFrequentlyUsed, setCleaningFrequentlyUsed] = useState(false);
-  const [cleaningToBuy, setCleaningToBuy] = useState(false);
-
-  const addFoodProduct = () => {
-    // Validate required fields
-    if (!foodName || !foodName.trim()) {
-      alert("Please enter an item name");
-      return;
-    }
-    if (foodQuantity === "" || isNaN(Number(foodQuantity))) {
-      alert("Please enter a valid quantity");
-      return;
-    }
-    if (foodMinStock === "" || isNaN(Number(foodMinStock))) {
-      alert("Please enter a valid minimum stock level");
-      return;
-    }
-
-    const newProduct: Product = {
-      id: crypto.randomUUID(),
-      name: foodName,
-      category: "Food & Beverage",
-      quantity: Number(foodQuantity),
-      unit: foodUnit,
-      minStock: Number(foodMinStock),
-      purchased: foodPurchased,
-      useBy: foodUseBy,
-      storage: foodStorage,
-      toBuy: foodToBuy,
-      frequentlyUsed: foodFrequentlyUsed,
-    };
-
-    onAddProduct(newProduct);
-
-    // reset form
-    setFoodName("");
-    setFoodQuantity("");
-    setFoodUnit("kg");
-    setFoodMinStock("");
-    setFoodPurchased("");
-    setFoodUseBy("");
-    setFoodStorage("");
-    setFoodFrequentlyUsed(false);
-    setFoodToBuy(false);
-
-    // Show success message and navigate back to dashboard
-    alert(`✓ ${foodName} added successfully!`);
-    setInventoryView("dashboard");
-  };
-
-  const addCleaningProduct = () => {
-    // Validate required fields
-    if (!cleaningName || !cleaningName.trim()) {
-      alert("Please enter an item name");
-      return;
-    }
-    if (cleaningQuantity === "" || isNaN(Number(cleaningQuantity))) {
-      alert("Please enter a valid quantity");
-      return;
-    }
-    if (cleaningMinStock === "" || isNaN(Number(cleaningMinStock))) {
-      alert("Please enter a valid minimum stock level");
-      return;
-    }
-
-    const newProduct: Product = {
-      id: crypto.randomUUID(),
-      name: cleaningName,
-      category: "Cleaning",
-      quantity: Number(cleaningQuantity),
-      unit: cleaningUnit,
-      minStock: Number(cleaningMinStock),
-      purchased: cleaningPurchased,
-      useBy: "",
-      storage: cleaningStorage,
-      toBuy: cleaningToBuy,
-      frequentlyUsed: cleaningFrequentlyUsed,
-    };
-
-    onAddProduct(newProduct);
-
-    // reset form
-    setCleaningName("");
-    setCleaningQuantity("");
-    setCleaningUnit("L");
-    setCleaningMinStock("");
-    setCleaningPurchased("");
-    setCleaningStorage("");
-    setCleaningFrequentlyUsed(false);
-    setCleaningToBuy(false);
-
-    // Show success message and navigate back to dashboard
-    alert(`✓ ${cleaningName} added successfully!`);
-    setInventoryView("dashboard");
-  };
-
-  const addProduct = () => {
-    if (inventoryTab === "food") {
-      addFoodProduct();
-    } else {
-      addCleaningProduct();
-    }
-  };
-
-  const handleBulkAdd = async (items: Partial<Product>[]) => {
-    const count = await onBulkAddItems(items);
-    alert(`✅ Added ${count} items to inventory!`);
-  };
+  const {
+    inventoryTab,
+    inventoryView,
+    isMobileView,
+    setInventoryTab,
+    setInventoryView,
+    foodForm,
+    cleaningForm,
+    addProduct,
+    handleBulkAdd,
+  } = useInventoryView({ onAddProduct, onBulkAddItems });
 
   return (
     <>
       {/* Header */}
-      <div className="inventory-header-section">
-        <h2>📦 Inventory Management</h2>
-      </div>
+      <Box className="inventory-header-section">
+        <Typography variant="h4" component="h2">
+          📦 Inventory Management
+        </Typography>
+      </Box>
 
       {/* Active user indicator */}
       {activeUser && (
-        <div
+        <Chip
+          avatar={
+            <span style={{ fontSize: "1.25rem", marginLeft: "8px" }}>
+              {activeUser.avatar}
+            </span>
+          }
+          label={`Active User: ${activeUser.name}`}
           className="active-user-badge"
-          style={{ backgroundColor: activeUser.color }}
-        >
-          <span className="active-user-avatar">{activeUser.avatar}</span>
-          Active User: {activeUser.name}
-        </div>
+          sx={{
+            bgcolor: activeUser.color,
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "1rem",
+            py: 2.5,
+          }}
+        />
       )}
 
       {/* Mobile Back Button */}
       {isMobileView && inventoryView !== "dashboard" && (
-        <button
+        <Button
           onClick={() => setInventoryView("dashboard")}
           className="mobile-back-btn"
+          startIcon={<ArrowBackIcon />}
+          variant="outlined"
         >
-          ← Back to Inventory
-        </button>
+          Back to Inventory
+        </Button>
       )}
 
       {inventoryView === "dashboard" ? (
@@ -212,85 +104,144 @@ export const InventoryView = ({
         ) : (
           <>
             {/* Statistics Cards */}
-            <div className="inventory-stats-grid">
-              <div className="stat-card stat-blue">
-                <div className="stat-value">{products.length}</div>
-                <div className="stat-label">Total Items</div>
-              </div>
+            <Grid container spacing={2} className="inventory-stats-grid">
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Card className="stat-card stat-blue">
+                  <CardContent>
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      className="stat-value"
+                    >
+                      {products.length}
+                    </Typography>
+                    <Typography variant="body2" className="stat-label">
+                      Total Items
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-              <div className="stat-card stat-red">
-                <div className="stat-value">
-                  {products.filter((p) => p.quantity === 0).length}
-                </div>
-                <div className="stat-label">Out of Stock</div>
-              </div>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Card className="stat-card stat-red">
+                  <CardContent>
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      className="stat-value"
+                    >
+                      {products.filter((p) => p.quantity === 0).length}
+                    </Typography>
+                    <Typography variant="body2" className="stat-label">
+                      Out of Stock
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-              <div className="stat-card stat-orange">
-                <div className="stat-value">
-                  {
-                    products.filter(
-                      (p) => p.quantity > 0 && p.quantity <= p.minStock,
-                    ).length
-                  }
-                </div>
-                <div className="stat-label">Low Stock</div>
-              </div>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Card className="stat-card stat-orange">
+                  <CardContent>
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      className="stat-value"
+                    >
+                      {
+                        products.filter(
+                          (p) => p.quantity > 0 && p.quantity <= p.minStock,
+                        ).length
+                      }
+                    </Typography>
+                    <Typography variant="body2" className="stat-label">
+                      Low Stock
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-              <div className="stat-card stat-pink">
-                <div className="stat-value">
-                  {
-                    products.filter((p) => {
-                      if (!p.useBy) return false;
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      const expiryDate = new Date(p.useBy);
-                      expiryDate.setHours(0, 0, 0, 0);
-                      return expiryDate < today;
-                    }).length
-                  }
-                </div>
-                <div className="stat-label">Expired</div>
-              </div>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Card className="stat-card stat-pink">
+                  <CardContent>
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      className="stat-value"
+                    >
+                      {
+                        products.filter((p) => {
+                          if (!p.useBy) return false;
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const expiryDate = new Date(p.useBy);
+                          expiryDate.setHours(0, 0, 0, 0);
+                          return expiryDate < today;
+                        }).length
+                      }
+                    </Typography>
+                    <Typography variant="body2" className="stat-label">
+                      Expired
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
 
-              <div className="stat-card stat-purple">
-                <div className="stat-value">
-                  {products.filter((p) => p.toBuy).length}
-                </div>
-                <div className="stat-label">Shopping List</div>
-              </div>
-            </div>
+              <Grid item xs={12} sm={6} md={2.4}>
+                <Card className="stat-card stat-purple">
+                  <CardContent>
+                    <Typography
+                      variant="h3"
+                      component="div"
+                      className="stat-value"
+                    >
+                      {products.filter((p) => p.toBuy).length}
+                    </Typography>
+                    <Typography variant="body2" className="stat-label">
+                      Shopping List
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
 
             {/* Compact Icon Toolbar - BELOW Stats */}
-            <div className="inventory-toolbar">
-              <button
+            <Box
+              className="inventory-toolbar"
+              sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}
+            >
+              <Button
                 onClick={() => setInventoryView("dashboard")}
                 className="toolbar-icon-btn active"
+                variant="contained"
+                startIcon={<DashboardIcon />}
               >
-                <span className="btn-icon">📊</span>
-                <span className="btn-label">Dashboard</span>
-              </button>
-              <button
+                Dashboard
+              </Button>
+              <Button
                 onClick={() => setInventoryView("form")}
                 className="toolbar-icon-btn"
+                variant="outlined"
+                startIcon={<AddIcon />}
               >
-                <span className="btn-icon">➕</span>
-                <span className="btn-label">Add Items</span>
-              </button>
-              <button
+                Add Items
+              </Button>
+              <Button
                 onClick={() => setInventoryView("receipt")}
                 className="toolbar-icon-btn"
+                variant="outlined"
+                startIcon={<ReceiptIcon />}
               >
-                <span className="btn-icon">📸</span>
-                <span className="btn-label">Receipt</span>
-              </button>
-              <button
+                Receipt
+              </Button>
+              <Button
                 onClick={() => setInventoryView("barcode")}
                 className="toolbar-icon-btn"
+                variant="outlined"
+                startIcon={<QrCodeScannerIcon />}
               >
-                <span className="btn-icon">📷</span>
-                <span className="btn-label">Barcode</span>
-              </button>
-            </div>
+                Barcode
+              </Button>
+            </Box>
 
             {/* Product List */}
             <ProductList
@@ -305,36 +256,43 @@ export const InventoryView = ({
         <>
           {/* Compact Icon Toolbar - For non-dashboard views (Desktop only) */}
           {!isMobileView && (
-            <div className="inventory-toolbar">
-              <button
+            <Box
+              className="inventory-toolbar"
+              sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}
+            >
+              <Button
                 onClick={() => setInventoryView("dashboard")}
                 className="toolbar-icon-btn"
+                variant="outlined"
+                startIcon={<DashboardIcon />}
               >
-                <span className="btn-icon">📊</span>
-                <span className="btn-label">Dashboard</span>
-              </button>
-              <button
+                Dashboard
+              </Button>
+              <Button
                 onClick={() => setInventoryView("form")}
                 className={`toolbar-icon-btn ${inventoryView === "form" ? "active" : ""}`}
+                variant={inventoryView === "form" ? "contained" : "outlined"}
+                startIcon={<AddIcon />}
               >
-                <span className="btn-icon">➕</span>
-                <span className="btn-label">Add Items</span>
-              </button>
-              <button
+                Add Items
+              </Button>
+              <Button
                 onClick={() => setInventoryView("receipt")}
                 className={`toolbar-icon-btn ${inventoryView === "receipt" ? "active" : ""}`}
+                variant={inventoryView === "receipt" ? "contained" : "outlined"}
+                startIcon={<ReceiptIcon />}
               >
-                <span className="btn-icon">📸</span>
-                <span className="btn-label">Receipt</span>
-              </button>
-              <button
+                Receipt
+              </Button>
+              <Button
                 onClick={() => setInventoryView("barcode")}
                 className={`toolbar-icon-btn ${inventoryView === "barcode" ? "active" : ""}`}
+                variant={inventoryView === "barcode" ? "contained" : "outlined"}
+                startIcon={<QrCodeScannerIcon />}
               >
-                <span className="btn-icon">📷</span>
-                <span className="btn-label">Barcode</span>
-              </button>
-            </div>
+                Barcode
+              </Button>
+            </Box>
           )}
 
           {inventoryView === "receipt" ? (
@@ -344,64 +302,72 @@ export const InventoryView = ({
           ) : inventoryView === "form" ? (
             <>
               {/* Inventory Sub-tabs */}
-              <div className="sub-tabs">
-                <button
+              <Box className="sub-tabs" sx={{ display: "flex", gap: 1, mb: 2 }}>
+                <Button
                   onClick={() => setInventoryTab("food")}
                   className={`sub-tab-btn ${inventoryTab === "food" ? "active food" : ""}`}
+                  variant={inventoryTab === "food" ? "contained" : "outlined"}
+                  color={inventoryTab === "food" ? "success" : "inherit"}
+                  fullWidth
                 >
                   🥗 Food & Beverage
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setInventoryTab("cleaning")}
                   className={`sub-tab-btn ${inventoryTab === "cleaning" ? "active cleaning" : ""}`}
+                  variant={
+                    inventoryTab === "cleaning" ? "contained" : "outlined"
+                  }
+                  color={inventoryTab === "cleaning" ? "info" : "inherit"}
+                  fullWidth
                 >
                   🧹 Cleaning & Supplies
-                </button>
-              </div>
+                </Button>
+              </Box>
 
               {/* Forms */}
               {inventoryTab === "food" ? (
                 <FoodForm
-                  name={foodName}
-                  quantity={foodQuantity}
-                  unit={foodUnit}
-                  minStock={foodMinStock}
-                  purchased={foodPurchased}
-                  useBy={foodUseBy}
-                  storage={foodStorage}
-                  frequentlyUsed={foodFrequentlyUsed}
-                  toBuy={foodToBuy}
+                  name={foodForm.name}
+                  quantity={foodForm.quantity}
+                  unit={foodForm.unit}
+                  minStock={foodForm.minStock}
+                  purchased={foodForm.purchased}
+                  useBy={foodForm.useBy}
+                  storage={foodForm.storage}
+                  frequentlyUsed={foodForm.frequentlyUsed}
+                  toBuy={foodForm.toBuy}
                   rooms={rooms}
-                  onNameChange={setFoodName}
-                  onQuantityChange={setFoodQuantity}
-                  onUnitChange={setFoodUnit}
-                  onMinStockChange={setFoodMinStock}
-                  onPurchasedChange={setFoodPurchased}
-                  onUseByChange={setFoodUseBy}
-                  onStorageChange={setFoodStorage}
-                  onFrequentlyUsedChange={setFoodFrequentlyUsed}
-                  onToBuyChange={setFoodToBuy}
+                  onNameChange={foodForm.setName}
+                  onQuantityChange={foodForm.setQuantity}
+                  onUnitChange={foodForm.setUnit}
+                  onMinStockChange={foodForm.setMinStock}
+                  onPurchasedChange={foodForm.setPurchased}
+                  onUseByChange={foodForm.setUseBy}
+                  onStorageChange={foodForm.setStorage}
+                  onFrequentlyUsedChange={foodForm.setFrequentlyUsed}
+                  onToBuyChange={foodForm.setToBuy}
                   onAddProduct={addProduct}
                 />
               ) : (
                 <CleaningForm
-                  name={cleaningName}
-                  quantity={cleaningQuantity}
-                  unit={cleaningUnit}
-                  minStock={cleaningMinStock}
-                  purchased={cleaningPurchased}
-                  storage={cleaningStorage}
-                  frequentlyUsed={cleaningFrequentlyUsed}
-                  toBuy={cleaningToBuy}
+                  name={cleaningForm.name}
+                  quantity={cleaningForm.quantity}
+                  unit={cleaningForm.unit}
+                  minStock={cleaningForm.minStock}
+                  purchased={cleaningForm.purchased}
+                  storage={cleaningForm.storage}
+                  frequentlyUsed={cleaningForm.frequentlyUsed}
+                  toBuy={cleaningForm.toBuy}
                   rooms={rooms}
-                  onNameChange={setCleaningName}
-                  onQuantityChange={setCleaningQuantity}
-                  onUnitChange={setCleaningUnit}
-                  onMinStockChange={setCleaningMinStock}
-                  onPurchasedChange={setCleaningPurchased}
-                  onStorageChange={setCleaningStorage}
-                  onFrequentlyUsedChange={setCleaningFrequentlyUsed}
-                  onToBuyChange={setCleaningToBuy}
+                  onNameChange={cleaningForm.setName}
+                  onQuantityChange={cleaningForm.setQuantity}
+                  onUnitChange={cleaningForm.setUnit}
+                  onMinStockChange={cleaningForm.setMinStock}
+                  onPurchasedChange={cleaningForm.setPurchased}
+                  onStorageChange={cleaningForm.setStorage}
+                  onFrequentlyUsedChange={cleaningForm.setFrequentlyUsed}
+                  onToBuyChange={cleaningForm.setToBuy}
                   onAddProduct={addProduct}
                 />
               )}

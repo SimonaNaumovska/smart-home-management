@@ -1,8 +1,5 @@
 import React, { useState } from "react";
-import type {
-  Household,
-  HouseholdMember,
-} from "../../shared/hooks/useHousehold";
+import type { Household, HouseholdMember } from "../../api/householdApi";
 import "./HouseholdInfo.css";
 
 interface HouseholdInfoProps {

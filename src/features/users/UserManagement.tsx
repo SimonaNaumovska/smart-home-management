@@ -1,5 +1,6 @@
 import type { User } from "../../types/Product";
-import type { HouseholdMember } from "../../shared/hooks/useHousehold";
+import type { HouseholdMember } from "../../api/householdApi";
+import { useUserManagement } from "./useUserManagement";
 
 interface UserManagementProps {
   currentUser: User | null;
@@ -12,6 +13,15 @@ export function UserManagement({
   householdMembers,
   currentUserId,
 }: UserManagementProps) {
+  const {
+    currentUser: user,
+    memberCardData,
+    currentUserCardStyles,
+  } = useUserManagement({
+    currentUser,
+    householdMembers,
+    currentUserId,
+  });
   return (
     <div
       style={{
@@ -25,16 +35,15 @@ export function UserManagement({
       <h2>👥 Household Members</h2>
       <p style={{ color: "#666", marginBottom: "20px" }}>
         These are all members of your household. You are currently logged in as{" "}
-        <strong>{currentUser?.name}</strong>.
+        <strong>{user?.name}</strong>.
       </p>
 
       {/* Current User Display */}
-      {currentUser && (
+      {user && (
         <div
           style={{
             padding: "12px",
-            backgroundColor: currentUser.color + "20",
-            border: `2px solid ${currentUser.color}`,
+            ...currentUserCardStyles,
             borderRadius: "8px",
             marginBottom: "16px",
             display: "flex",
@@ -42,10 +51,10 @@ export function UserManagement({
             gap: "12px",
           }}
         >
-          <span style={{ fontSize: "32px" }}>{currentUser.avatar}</span>
+          <span style={{ fontSize: "32px" }}>{user.avatar}</span>
           <div>
             <div style={{ fontWeight: "bold", fontSize: "18px" }}>
-              You: {currentUser.name}
+              You: {user.name}
             </div>
             <div style={{ fontSize: "14px", color: "#666" }}>
               All actions are logged under your account
@@ -63,49 +72,44 @@ export function UserManagement({
         }}
       >
         <h3 style={{ marginBottom: "8px" }}>All Members:</h3>
-        {householdMembers.map((member) => (
-          <div
-            key={member.id}
-            style={{
-              padding: "12px 16px",
-              border:
-                member.userId === currentUserId
-                  ? `3px solid ${member.color}`
-                  : "2px solid #ddd",
-              borderRadius: "8px",
-              backgroundColor:
-                member.userId === currentUserId ? member.color + "30" : "white",
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-            }}
-          >
-            <span style={{ fontSize: "24px" }}>{member.avatar}</span>
-            <div style={{ flex: 1 }}>
-              <div
-                style={{
-                  fontWeight:
-                    member.userId === currentUserId ? "bold" : "normal",
-                }}
-              >
-                {member.displayName}
-                {member.userId === currentUserId && " (You)"}
+        {memberCardData.map(
+          ({ member, isCurrentUser, displayName, cardStyles }) => (
+            <div
+              key={member.id}
+              style={{
+                padding: "12px 16px",
+                ...cardStyles,
+                borderRadius: "8px",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <span style={{ fontSize: "24px" }}>{member.avatar}</span>
+              <div style={{ flex: 1 }}>
+                <div
+                  style={{
+                    fontWeight: isCurrentUser ? "bold" : "normal",
+                  }}
+                >
+                  {displayName}
+                </div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#666",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {member.role}
+                </div>
               </div>
-              <div
-                style={{
-                  fontSize: "12px",
-                  color: "#666",
-                  textTransform: "capitalize",
-                }}
-              >
-                {member.role}
-              </div>
+              {isCurrentUser && (
+                <span style={{ color: "#4CAF50", fontSize: "20px" }}>✓</span>
+              )}
             </div>
-            {member.userId === currentUserId && (
-              <span style={{ color: "#4CAF50", fontSize: "20px" }}>✓</span>
-            )}
-          </div>
-        ))}
+          ),
+        )}
       </div>
 
       <div

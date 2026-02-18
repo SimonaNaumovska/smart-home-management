@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { Product } from "../../types/Product";
+import { useShoppingList } from "./useShoppingList";
 
 interface ShoppingListProps {
   products: Product[];
@@ -12,51 +12,17 @@ export const ShoppingList = ({
   onMarkPurchased,
   onRemoveFromList,
 }: ShoppingListProps) => {
-  const [filter, setFilter] = useState<"all" | "food" | "cleaning">("all");
-  const [sortBy, setSortBy] = useState<"name" | "category">("category");
-
-  // Get items to buy
-  const shoppingItems = products.filter((p) => p.toBuy);
-
-  // Filter by category
-  const filteredItems =
-    filter === "all"
-      ? shoppingItems
-      : shoppingItems.filter((p) => p.category === filter);
-
-  // Sort items
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    if (sortBy === "name") {
-      return a.name.localeCompare(b.name);
-    } else {
-      return a.category.localeCompare(b.category);
-    }
-  });
-
-  // Group by category for better visualization
-  const groupedByCategory = sortedItems.reduce(
-    (acc, item) => {
-      const category = item.category;
-      if (!acc[category]) {
-        acc[category] = [];
-      }
-      acc[category].push(item);
-      return acc;
-    },
-    {} as Record<string, Product[]>,
-  );
-
-  const getCategoryColor = (category: string) => {
-    if (category === "food") return "#FFE0B2";
-    if (category === "cleaning") return "#C8E6C9";
-    return "#E0E0E0";
-  };
-
-  const getCategoryEmoji = (category: string) => {
-    if (category === "food") return "🛒";
-    if (category === "cleaning") return "🧹";
-    return "📦";
-  };
+  const {
+    filter,
+    setFilter,
+    sortBy,
+    setSortBy,
+    sortedItems,
+    groupedByCategory,
+    stats,
+    getCategoryColor,
+    getCategoryEmoji,
+  } = useShoppingList({ products });
 
   return (
     <div style={{ padding: "20px" }}>
@@ -84,7 +50,7 @@ export const ShoppingList = ({
               fontWeight: "bold",
             }}
           >
-            📊 Total: {shoppingItems.length} items
+            📊 Total: {stats.total} items
           </div>
           <div
             style={{
@@ -96,7 +62,7 @@ export const ShoppingList = ({
               fontWeight: "bold",
             }}
           >
-            🍎 Food: {shoppingItems.filter((p) => p.category === "food").length}
+            🍎 Food: {stats.food}
           </div>
           <div
             style={{
@@ -108,8 +74,7 @@ export const ShoppingList = ({
               fontWeight: "bold",
             }}
           >
-            🧹 Cleaning:{" "}
-            {shoppingItems.filter((p) => p.category === "cleaning").length}
+            🧹 Cleaning: {stats.cleaning}
           </div>
         </div>
 

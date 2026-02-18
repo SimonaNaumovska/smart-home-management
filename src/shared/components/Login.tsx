@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../../supabase/config";
+import { authApi } from "../../api/authApi";
 
 interface LoginProps {
   onLoginSuccess: (userId: string, email: string) => void;
@@ -22,42 +22,29 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     try {
       if (isSignUp) {
         // Sign up
-        const { error: signUpError } = await supabase.auth.signUp({
+        const result = await authApi.signUp({
           email,
           password,
         });
 
-        if (signUpError) {
-          setError(signUpError.message);
-          setLoading(false);
-          return;
-        }
-
-        setSuccess("✅ Account created! Please check your email to verify.");
+        setSuccess(result.message);
         setEmail("");
         setPassword("");
         setTimeout(() => setIsSignUp(false), 2000);
       } else {
         // Sign in
-        const { data, error: signInError } =
-          await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
+        const result = await authApi.signIn({
+          email,
+          password,
+        });
 
-        if (signInError) {
-          setError(signInError.message);
-          setLoading(false);
-          return;
-        }
-
-        if (data.user) {
-          setSuccess("✅ Logged in successfully!");
-          onLoginSuccess(data.user.id, data.user.email || "");
-        }
+        setSuccess("✅ Logged in successfully!");
+        onLoginSuccess(result.user.id, result.user.email);
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (err: any) {
+      setError(
+        err.message || "An unexpected error occurred. Please try again.",
+      );
       console.error("Auth error:", err);
     } finally {
       setLoading(false);

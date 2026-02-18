@@ -1,5 +1,21 @@
-import { useState } from "react";
 import type { Product } from "../../types/Product";
+import { useProductList } from "./useProductList";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormControlLabel,
+  Checkbox,
+  Button,
+  Grid,
+  Box,
+} from "@mui/material";
 
 interface ProductListProps {
   products: Product[];
@@ -14,7 +30,7 @@ export function ProductList({
   onDelete,
   onEdit,
 }: ProductListProps) {
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const { editingProduct, setEditingProduct } = useProductList();
 
   const renderCardView = () => (
     <div className="card-view">
@@ -309,22 +325,13 @@ export function ProductList({
       )}
 
       {/* Edit Modal */}
-      {editingProduct && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-          }}
-          onClick={() => setEditingProduct(null)}
-        >
+      <Dialog
+        open={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {editingProduct && (
           <EditProductModal
             product={editingProduct}
             onSave={(updatedProduct) => {
@@ -333,8 +340,8 @@ export function ProductList({
             }}
             onCancel={() => setEditingProduct(null)}
           />
-        </div>
-      )}
+        )}
+      </Dialog>
     </>
   );
 }
@@ -368,263 +375,148 @@ function EditProductModal({
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "white",
-        borderRadius: "8px",
-        padding: window.innerWidth < 768 ? "20px" : "30px",
-        width: window.innerWidth < 768 ? "calc(100% - 40px)" : "auto",
-        maxWidth: window.innerWidth < 768 ? "none" : "500px",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-        margin: window.innerWidth < 768 ? "20px" : "0",
-      }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <h2 style={{ marginBottom: "20px", color: "#333" }}>✏️ Edit Product</h2>
+    <>
+      <DialogTitle>✏️ Edit Product</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          {/* Product Name */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Product Name"
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              variant="outlined"
+            />
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Product Name
-        </label>
-        <input
-          type="text"
-          value={formData.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
+          {/* Category */}
+          <Grid item xs={12}>
+            <FormControl fullWidth>
+              <InputLabel>Category</InputLabel>
+              <Select
+                value={formData.category}
+                onChange={(e) => handleChange("category", e.target.value)}
+                label="Category"
+              >
+                <MenuItem value="food">🍎 Food</MenuItem>
+                <MenuItem value="cleaning">🧹 Cleaning</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Category
-        </label>
-        <select
-          value={formData.category}
-          onChange={(e) => handleChange("category", e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        >
-          <option value="food">🍎 Food</option>
-          <option value="cleaning">🧹 Cleaning</option>
-        </select>
-      </div>
+          {/* Quantity & Unit */}
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Quantity"
+              value={formData.quantity}
+              onChange={(e) =>
+                handleChange("quantity", parseFloat(e.target.value))
+              }
+              variant="outlined"
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Unit"
+              value={formData.unit}
+              onChange={(e) => handleChange("unit", e.target.value)}
+              variant="outlined"
+            />
+          </Grid>
 
-      <div style={{ display: "flex", gap: "15px", marginBottom: "15px" }}>
-        <div style={{ flex: 1 }}>
-          <label
-            style={{
-              display: "block",
-              fontWeight: "bold",
-              marginBottom: "5px",
-            }}
-          >
-            Quantity
-          </label>
-          <input
-            type="number"
-            value={formData.quantity}
-            onChange={(e) =>
-              handleChange("quantity", parseFloat(e.target.value))
-            }
-            style={{
-              width: "100%",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-        <div style={{ flex: 1 }}>
-          <label
-            style={{
-              display: "block",
-              fontWeight: "bold",
-              marginBottom: "5px",
-            }}
-          >
-            Unit
-          </label>
-          <input
-            type="text"
-            value={formData.unit}
-            onChange={(e) => handleChange("unit", e.target.value)}
-            style={{
-              width: "100%",
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ddd",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
-      </div>
+          {/* Minimum Stock */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Minimum Stock"
+              value={formData.minStock}
+              onChange={(e) =>
+                handleChange("minStock", parseFloat(e.target.value))
+              }
+              variant="outlined"
+            />
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Minimum Stock
-        </label>
-        <input
-          type="number"
-          value={formData.minStock}
-          onChange={(e) => handleChange("minStock", parseFloat(e.target.value))}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
+          {/* Storage Location */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Storage Location"
+              value={formData.storage}
+              onChange={(e) => handleChange("storage", e.target.value)}
+              placeholder="e.g., Fridge, Pantry, Under sink"
+              variant="outlined"
+            />
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Storage Location
-        </label>
-        <input
-          type="text"
-          value={formData.storage}
-          onChange={(e) => handleChange("storage", e.target.value)}
-          placeholder="e.g., Fridge, Pantry, Under sink"
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
+          {/* Purchased Date */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Purchased Date"
+              value={formData.purchased}
+              onChange={(e) => handleChange("purchased", e.target.value)}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Purchased Date
-        </label>
-        <input
-          type="date"
-          value={formData.purchased}
-          onChange={(e) => handleChange("purchased", e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
+          {/* Use By / Expiration Date */}
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Use By / Expiration Date"
+              value={formData.useBy}
+              onChange={(e) => handleChange("useBy", e.target.value)}
+              variant="outlined"
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
 
-      <div style={{ marginBottom: "15px" }}>
-        <label
-          style={{ display: "block", fontWeight: "bold", marginBottom: "5px" }}
-        >
-          Use By / Expiration Date
-        </label>
-        <input
-          type="date"
-          value={formData.useBy}
-          onChange={(e) => handleChange("useBy", e.target.value)}
-          style={{
-            width: "100%",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ddd",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: "20px", display: "flex", gap: "15px" }}>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={formData.frequentlyUsed}
-            onChange={() => handleToggle("frequentlyUsed")}
-          />
-          <span>★ Frequently Used</span>
-        </label>
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={formData.toBuy}
-            onChange={() => handleToggle("toBuy")}
-          />
-          <span>🛒 To Buy</span>
-        </label>
-      </div>
-
-      <div style={{ display: "flex", gap: "10px" }}>
-        <button
+          {/* Checkboxes */}
+          <Grid item xs={12}>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.frequentlyUsed}
+                    onChange={() => handleToggle("frequentlyUsed")}
+                  />
+                }
+                label="★ Frequently Used"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.toBuy}
+                    onChange={() => handleToggle("toBuy")}
+                  />
+                }
+                label="🛒 To Buy"
+              />
+            </Box>
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onCancel} variant="outlined" color="inherit">
+          Cancel
+        </Button>
+        <Button
           onClick={() => onSave(formData)}
-          style={{
-            flex: 1,
-            padding: "12px",
-            backgroundColor: "#28a745",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-          }}
+          variant="contained"
+          color="success"
         >
           💾 Save Changes
-        </button>
-        <button
-          onClick={onCancel}
-          style={{
-            flex: 1,
-            padding: "12px",
-            backgroundColor: "#6c757d",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontWeight: "bold",
-            fontSize: "14px",
-          }}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DialogActions>
+    </>
   );
 }

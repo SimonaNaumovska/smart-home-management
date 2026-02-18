@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "../../supabase/config";
+import { authApi } from "../../api/authApi";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,11 +10,11 @@ export const useAuth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user) {
+        const session = await authApi.getSession();
+        if (session.user) {
           setIsAuthenticated(true);
-          setCurrentUserEmail(data.session.user.email || "");
-          setCurrentUserId(data.session.user.id);
+          setCurrentUserEmail(session.user.email);
+          setCurrentUserId(session.user.id);
         }
       } catch (error) {
         console.error("Auth check failed:", error);
@@ -25,13 +25,12 @@ export const useAuth = () => {
 
     checkAuth();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
+    // Subscribe to auth state changes
+    const unsubscribe = authApi.onAuthStateChange((user) => {
+      if (user) {
         setIsAuthenticated(true);
-        setCurrentUserEmail(session.user.email || "");
-        setCurrentUserId(session.user.id);
+        setCurrentUserEmail(user.email);
+        setCurrentUserId(user.id);
       } else {
         setIsAuthenticated(false);
         setCurrentUserEmail("");
@@ -40,12 +39,12 @@ export const useAuth = () => {
     });
 
     return () => {
-      subscription?.unsubscribe();
+      unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await authApi.signOut();
     setIsAuthenticated(false);
     setCurrentUserEmail("");
     setCurrentUserId("");

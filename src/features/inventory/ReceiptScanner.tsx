@@ -1,198 +1,25 @@
-import { useState } from "react";
-import { createWorker } from "tesseract.js";
 import type { Product } from "../../types/Product";
-
-interface ParsedItem {
-  name: string;
-  quantity: number;
-  unit: string;
-  price?: number;
-}
+import { useReceiptScanner, type ParsedItem } from "./useReceiptScanner";
 
 interface ReceiptScannerProps {
   onAddItems: (items: Partial<Product>[]) => void;
 }
 
 export function ReceiptScanner({ onAddItems }: ReceiptScannerProps) {
-  const [image, setImage] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [parsedItems, setParsedItems] = useState<ParsedItem[]>([]);
-  const [rawText, setRawText] = useState("");
-  const [showRaw, setShowRaw] = useState(false);
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImage(reader.result as string);
-        setParsedItems([]);
-        setRawText("");
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const parseReceiptText = (text: string): ParsedItem[] => {
-    const lines = text.split("\n").filter((line) => line.trim());
-    const items: ParsedItem[] = [];
-
-    // Find the section between "ДДВ број" and "промет од"
-    let startIndex = -1;
-    let endIndex = lines.length;
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].toLowerCase();
-      if (line.includes("ддв број") || line.includes("ddv broj")) {
-        startIndex = i + 1; // Start after this line
-      }
-      if (line.includes("промет од") || line.includes("promet od")) {
-        endIndex = i; // Stop before this line
-        break;
-      }
-    }
-
-    // If we didn't find markers, try to parse everything (fallback)
-    if (startIndex === -1) startIndex = 0;
-
-    // Parse items in the relevant section
-    // Format: Line 1 = Item name, Line 2 = Quantity/Unit/Price
-    const relevantLines = lines.slice(startIndex, endIndex);
-
-    for (let i = 0; i < relevantLines.length - 1; i += 2) {
-      const nameLine = relevantLines[i].trim();
-      const detailLine = relevantLines[i + 1]?.trim();
-
-      if (!nameLine || !detailLine) continue;
-
-      // Skip header/footer lines
-      if (
-        nameLine.match(
-          /^(total|subtotal|tax|вкупно|данок|сметка|картичка|готовина|payment|благајна)/i,
-        )
-      ) {
-        i -= 1; // Don't skip next line
-        continue;
-      }
-
-      // Parse the detail line: quantity unit price
-      // Examples: "250 g 89.00", "1 kom 120.00", "0.5 kg 150.00"
-      const detailPattern =
-        /(\d+(?:[.,]\d+)?)\s*([a-zA-Zа-яА-Я.]+)?\s+(\d+(?:[.,]\d+)?)/;
-      const match = detailLine.match(detailPattern);
-
-      if (match) {
-        const [, qty, unit, price] = match;
-
-        // Normalize units
-        let normalizedUnit = unit?.toLowerCase() || "unit";
-        const unitMap: { [key: string]: string } = {
-          gr: "g",
-          "g.": "g",
-          грам: "g",
-          грами: "g",
-          kg: "kg",
-          "kg.": "kg",
-          кг: "kg",
-          kilogram: "kg",
-          l: "L",
-          "l.": "L",
-          liter: "L",
-          литар: "L",
-          ml: "ml",
-          "ml.": "ml",
-          милилитар: "ml",
-          kom: "pieces",
-          "kom.": "pieces",
-          парче: "pieces",
-          парчиња: "pieces",
-          пакет: "pieces",
-          шише: "pieces",
-        };
-
-        normalizedUnit = unitMap[normalizedUnit] || normalizedUnit;
-
-        items.push({
-          name: nameLine,
-          quantity: Number.parseFloat(qty.replace(",", ".")),
-          unit: normalizedUnit,
-          price: Number.parseFloat(price.replace(",", ".")),
-        });
-      }
-    }
-
-    return items;
-  };
-
-  const processReceipt = async () => {
-    if (!image) return;
-
-    setIsProcessing(true);
-    setProgress(0);
-    setParsedItems([]);
-
-    try {
-      // Support Macedonian Cyrillic + English
-      const worker = await createWorker(["mkd", "eng"], 1, {
-        logger: (m) => {
-          if (m.status === "recognizing text") {
-            setProgress(Math.round(m.progress * 100));
-          }
-        },
-      });
-
-      const {
-        data: { text },
-      } = await worker.recognize(image);
-
-      setRawText(text);
-      const items = parseReceiptText(text);
-      setParsedItems(items);
-
-      await worker.terminate();
-    } catch (error) {
-      console.error("OCR Error:", error);
-      alert("Failed to process receipt. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleAddToInventory = () => {
-    const products: Partial<Product>[] = parsedItems.map((item) => ({
-      id: crypto.randomUUID(),
-      name: item.name,
-      category: "food", // Default to food, user can change later
-      quantity: item.quantity,
-      unit: item.unit,
-      minStock: item.quantity * 0.2, // Set min stock to 20% of initial quantity
-      lastPurchased: new Date().toISOString().split("T")[0],
-      useBy: "",
-      status: "in-stock",
-    }));
-
-    onAddItems(products);
-
-    // Reset
-    setImage(null);
-    setParsedItems([]);
-    setRawText("");
-  };
-
-  const removeItem = (index: number) => {
-    setParsedItems(parsedItems.filter((_, i) => i !== index));
-  };
-
-  const updateItem = (
-    index: number,
-    field: keyof ParsedItem,
-    value: string | number,
-  ) => {
-    const updated = [...parsedItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setParsedItems(updated);
-  };
+  const {
+    image,
+    isProcessing,
+    progress,
+    parsedItems,
+    rawText,
+    showRaw,
+    setShowRaw,
+    handleImageUpload,
+    processReceipt,
+    handleAddToInventory,
+    removeItem,
+    updateItem,
+  } = useReceiptScanner({ onAddItems });
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto", width: "100%" }}>
