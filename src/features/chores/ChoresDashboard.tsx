@@ -167,7 +167,7 @@ export function ChoresDashboard({
               Dashboard
             </Button>
             <Button
-              variant={choreView === "form" ? "contained" : "outlined"}
+              // variant={choreView === "form" ? "contained" : "outlined"}
               color="success"
               onClick={() => setChoreView("form")}
             >
